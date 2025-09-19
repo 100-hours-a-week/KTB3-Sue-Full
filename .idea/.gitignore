@@ -1,0 +1,11 @@
+# 디폴트 무시된 파일
+/shelf/
+/workspace.xml
+Homework.iml
+../out/.DS_store
+../out/
+.idea/
+
+out/
+.DS_Store
+.idea/
