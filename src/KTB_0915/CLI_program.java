@@ -14,10 +14,6 @@ public class CLI_program {
         private final int value;
         OrderOption(int value){ this.value = value; }
         public int getValue(){ return value; }
-        public static OrderOption fromInt(int i){
-            for(OrderOption o : values()) if(o.value==i) return o;
-            return null;
-        }
     }
 
     public static void main(String[] args) {
