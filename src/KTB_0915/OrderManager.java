@@ -35,7 +35,7 @@ public class OrderManager {
     }
 
     public Beverage getMenu(int menuNum){
-        return new Beverage(orderList.get(menuNum - 1).getMenuName(), orderList.get(menuNum - 1).getPrice());
+        return orderList.get(menuNum - 1);
     }
 
 }
