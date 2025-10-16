@@ -1,0 +1,19 @@
+package com.example.spring_restapi.dto.request;
+
+public class SignUpRequest {
+    private String email;
+    private String password;
+    private String nickname;
+    private String profile_image;
+    private String introduce;
+
+    public String getEmail(){ return email; }
+
+    public String getPassword(){ return password; }
+
+    public String getNickname() { return nickname; }
+
+    public String getProfile_image() { return profile_image; }
+
+    public String getIntroduce() { return introduce; }
+}
