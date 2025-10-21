@@ -11,10 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class PostService {
@@ -36,8 +34,7 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Set likedUsers = new HashSet();
-        Post newPost = new Post(null, req.getAuthor_id(), req.getTitle(), req.getContent(), req.getImages(), likedUsers, 0, LocalDateTime.now());
+        Post newPost = new Post(null, req.getAuthor_id(), req.getTitle(), req.getContent(), req.getImages(),0, LocalDateTime.now());
 
         // 로그인된 유저인지 토큰 확인 로직 추가 예정
 
@@ -70,8 +67,12 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
+        Optional<List<Post>> findPost = postRepository.findPostsOfPage(page, size);
+        if(findPost.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
         // 권한 확인 로직 추가 예정
-        return postRepository.findPostsOfPage(page, size);
+        return findPost.get();
     }
 
     public Post updatePost(Long post_id, UpdatePostRequest req){
@@ -115,52 +116,6 @@ public class PostService {
         }
 
         return postRepository.deletePostByPostId(post_id);
-    }
-
-
-    public Integer getLikeCount(Long post_id){
-        Optional<Post> existing = postRepository.findPostByPostId(post_id);
-        if(existing.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        Post post = existing.get();
-
-        return post.getLikeCount();
-    }
-
-    public Post like(Long post_id, Long user_id){
-        Optional<Post> existing = postRepository.findPostByPostId(post_id);
-        if(existing.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        Post post = existing.get();
-
-        if(post.isLikedByUser(user_id)){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "already_like");
-        }
-
-        post.like(user_id);
-
-        return post;
-    }
-
-    public Post unlike(Long post_id, Long user_id){
-        Optional<Post> existing = postRepository.findPostByPostId(post_id);
-        if(existing.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        Post post = existing.get();
-
-        if(!post.isLikedByUser(user_id)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-        }
-
-        post.unlike(user_id);
-
-        return post;
     }
 
 }

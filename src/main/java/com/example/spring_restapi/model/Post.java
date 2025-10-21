@@ -3,9 +3,7 @@ package com.example.spring_restapi.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Post {
     @Schema(description = "게시글 아이디", example = "1L")
@@ -23,9 +21,6 @@ public class Post {
     @Schema(description = "게시글 콘텐츠 이미지", example = "[post1.jpg, post2.jpg]")
     private List<String> images;
 
-    @Schema(description = "게시글에 좋아요를 누른 유저들의 아이디 세트", example = "[1L, 2L, 3L]")
-    private final Set<Long> likedUserIds;
-
     @Schema(description = "게시글의 조회수", example = "5")
     private Integer watch;
 
@@ -36,13 +31,12 @@ public class Post {
     private LocalDateTime rewriteDate;
 
 
-    public Post(Long post_id, Long author_id, String title, String content, List<String> images, Set<Long> likedUserIds, Integer watch, LocalDateTime date){
+    public Post(Long post_id, Long author_id, String title, String content, List<String> images, Integer watch, LocalDateTime date){
         this.post_id = post_id;
         this.author_id = author_id;
         this.title = title;
         this.content = content;
         this.images = images;
-        this.likedUserIds = likedUserIds;
         this.watch = watch;
         this.date = date;
     }
@@ -67,10 +61,6 @@ public class Post {
         this.images = images;
     }
 
-    public void like(Long likeUserId) { likedUserIds.add(likeUserId); }
-
-    public void unlike(Long unlikeUserId) { likedUserIds.remove(unlikeUserId); }
-
     public void setWatch(Integer watch){
         this.watch = watch;
     }
@@ -93,12 +83,6 @@ public class Post {
     public String getContent() { return content; }
 
     public List<String> getImages() { return images; }
-
-    public Set<Long> getLikedUserIds() { return likedUserIds; }
-
-    public Integer getLikeCount() { return likedUserIds.size(); }
-
-    public Boolean isLikedByUser(Long user_id) { return likedUserIds.contains(user_id); }
 
     public Integer getWatch() { return watch; }
 

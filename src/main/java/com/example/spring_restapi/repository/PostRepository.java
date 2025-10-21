@@ -22,17 +22,9 @@ public class PostRepository {
         images1.add("image2.jpg");
         images1.add("image3.jpg");
 
-        Set<Long> users1 = new HashSet<>();
-        users1.add(1L);
-        users1.add(2L);
-
-        Set<Long> users2 = new HashSet<>();
-        users1.add(2L);
-        users1.add(3L);
-
-        Post post1 = new Post(null, 1L, "1week TIL","my homework post1...", images1, users1, 2, LocalDateTime.parse("2025-10-16T10:00:00"));
-        Post post2 = new Post(null, 2L, "3 week TIL", "my homework post2...TIL", images1, users2, 5, LocalDateTime.parse("2025-10-15T10:00:00"));
-        Post post3 = new Post(null, 3L, "No...", "my homework post...GOOD", images2, users1, 10, LocalDateTime.parse("2025-10-15T12:00:00"));
+        Post post1 = new Post(null, 1L, "1week TIL","my homework post1...", images1, 2, LocalDateTime.parse("2025-10-16T10:00:00"));
+        Post post2 = new Post(null, 2L, "3 week TIL", "my homework post2...TIL", images1, 5, LocalDateTime.parse("2025-10-15T10:00:00"));
+        Post post3 = new Post(null, 3L, "No...", "my homework post...GOOD", images2, 10, LocalDateTime.parse("2025-10-15T12:00:00"));
 
         save(post1);
         save(post2);
@@ -48,10 +40,6 @@ public class PostRepository {
         return postMap.get(post.getPost_id());
     }
 
-    public Optional<Post> update(Post post){
-        return Optional.ofNullable(postMap.put(post.getPost_id(), post));
-    }
-
     public List<Post> findAllPost(){
         List<Post> posts = new ArrayList<>();
         for(Long post_id: postMap.keySet()){
@@ -62,7 +50,7 @@ public class PostRepository {
         return posts;
     }
 
-    public List<Post> findPostsOfPage(int page, int size){
+    public Optional<List<Post>> findPostsOfPage(int page, int size){
         List<Post> posts = new ArrayList<>(postMap.values());
 
         // 최신순 정렬
@@ -74,13 +62,13 @@ public class PostRepository {
         int endIndex = startIndex + size;
 
 
-        if (startIndex >= total) return Collections.emptyList();
+        if (startIndex >= total) return Optional.empty();
 
         if(endIndex >= total) {
             endIndex = total;
         }
 
-        return posts.subList(startIndex, endIndex);
+        return Optional.of(posts.subList(startIndex, endIndex));
     }
 
     public Optional<Post> findPostByPostId(Long post_id){
@@ -96,6 +84,10 @@ public class PostRepository {
             }
         }
         return findPost;
+    }
+
+    public Optional<Post> update(Post post){
+        return Optional.ofNullable(postMap.put(post.getPost_id(), post));
     }
 
     public Post deletePostByPostId(Long post_id){
