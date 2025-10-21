@@ -1,14 +1,15 @@
 package com.example.spring_restapi.repository;
 
-import com.example.spring_restapi.dto.Post;
+import com.example.spring_restapi.model.Post;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class PostRepository {
-    private final Map<Long, Post> postMap = new LinkedHashMap<>();
+    private final ConcurrentHashMap<Long, Post> postMap = new ConcurrentHashMap<>();
     private long sequence;
 
     public PostRepository(){
@@ -29,16 +30,13 @@ public class PostRepository {
         users1.add(2L);
         users1.add(3L);
 
-        Post post1 = new Post(1L, 1L, "1week TIL","my homework post1...", images1, users1, 2, LocalDateTime.parse("2025-10-16T10:00:00"));
-        Post post2 = new Post(2L, 2L, "3 week TIL", "my homework post2...TIL", images1, users2, 5, LocalDateTime.parse("2025-10-15T10:00:00"));
-        Post post3 = new Post(3L, 3L, "No...", "my homework post...GOOD", images1, users1, 10, LocalDateTime.parse("2025-10-15T12:00:00"));
+        Post post1 = new Post(null, 1L, "1week TIL","my homework post1...", images1, users1, 2, LocalDateTime.parse("2025-10-16T10:00:00"));
+        Post post2 = new Post(null, 2L, "3 week TIL", "my homework post2...TIL", images1, users2, 5, LocalDateTime.parse("2025-10-15T10:00:00"));
+        Post post3 = new Post(null, 3L, "No...", "my homework post...GOOD", images2, users1, 10, LocalDateTime.parse("2025-10-15T12:00:00"));
 
-        sequence++;
-        postMap.put(post1.getPost_id(), post1);
-        sequence++;
-        postMap.put(post2.getPost_id(), post2);
-        sequence++;
-        postMap.put(post3.getPost_id(), post3);
+        save(post1);
+        save(post2);
+        save(post3);
     }
 
     public Post save(Post post){
@@ -51,13 +49,7 @@ public class PostRepository {
     }
 
     public Optional<Post> update(Post post){
-        for(Map.Entry<Long, Post> entry : postMap.entrySet()){
-            Post find = entry.getValue();
-            if(find.getPost_id().equals(post.getPost_id())){
-                return Optional.ofNullable(postMap.put(post.getPost_id(), post));
-            }
-        }
-        return Optional.empty();
+        return Optional.ofNullable(postMap.put(post.getPost_id(), post));
     }
 
     public List<Post> findAllPost(){

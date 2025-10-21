@@ -1,11 +1,10 @@
 package com.example.spring_restapi.service;
 
-import com.example.spring_restapi.dto.User;
+import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.dto.request.*;
 import com.example.spring_restapi.dto.response.SignUpResponse;
 import com.example.spring_restapi.repository.UserRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 

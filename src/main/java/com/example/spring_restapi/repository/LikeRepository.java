@@ -1,7 +1,6 @@
 package com.example.spring_restapi.repository;
 
-import com.example.spring_restapi.dto.Like;
-import com.example.spring_restapi.dto.User;
+import com.example.spring_restapi.model.Like;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;

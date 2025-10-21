@@ -1,14 +1,27 @@
-package com.example.spring_restapi.dto;
+package com.example.spring_restapi.model;
 
-import java.util.Optional;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class User {
+    @Schema(description = "사용자 아이디", example = "1L")
     private Long user_id;
+
+    @Schema(description = "사용자 이메일", example = "2L")
     private String email;
+
+    @Schema(description = "사용자 비밀번호", example = "password")
     private String password;
+
+    @Schema(description = "사용자 닉네임", example = "sue")
     private String nickname;
+
+    @Schema(description = "사용자 프로필 이미지", example = "profileImage.jpg")
     private String profileImage;
+
+    @Schema(description = "사용자 소개말", example = "Hi, I'm sue")
     private String introduce;
+
+    @Schema(description = "사용자 토큰", example = "eJ...")
     private String token;
 
     public User(){}

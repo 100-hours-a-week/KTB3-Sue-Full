@@ -1,6 +1,6 @@
 package com.example.spring_restapi.repository;
 
-import com.example.spring_restapi.dto.User;
+import com.example.spring_restapi.model.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -12,15 +12,13 @@ public class UserRepository {
 
     public UserRepository(){
         sequence = 0;
-        User user1 = new User(1L, "osj1405@naver.com", "osj1405", "sue", null, null, null);
-        User user2 = new User(2L, "osujin35@naver.com", "osujin35", "sujin", null, null, null);
-        User user3 = new User(3L, "duckjin1405@gmail.com", "duckjin1405", "osj", null, null, null);
-        sequence++;
-        userMap.put(user1.getUser_id(), user1);
-        sequence++;
-        userMap.put(user2.getUser_id(), user2);
-        sequence++;
-        userMap.put(user3.getUser_id(), user3);
+        User user1 = new User(null, "osj1405@naver.com", "osj1405", "sue", null, null, null);
+        User user2 = new User(null, "osujin35@naver.com", "osujin35", "sujin", null, null, null);
+        User user3 = new User(null, "duckjin1405@gmail.com", "duckjin1405", "osj", null, null, null);
+
+        save(user1);
+        save(user2);
+        save(user3);
     }
 
     public User save(User user){
@@ -56,13 +54,7 @@ public class UserRepository {
     }
 
     public Optional<User> update(User user){
-        for(Map.Entry<Long, User> entry : userMap.entrySet()){
-            User find = entry.getValue();
-            if(find.getUser_id().equals(user.getUser_id())){
-                return Optional.ofNullable(userMap.put(user.getUser_id(), user));
-            }
-        }
-        return Optional.empty();
+        return Optional.ofNullable(userMap.put(user.getUser_id(), user));
     }
 
     public User deleteUserById(Long user_id){

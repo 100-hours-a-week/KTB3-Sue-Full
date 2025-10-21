@@ -1,6 +1,6 @@
 package com.example.spring_restapi.service;
 
-import com.example.spring_restapi.dto.Comment;
+import com.example.spring_restapi.model.Comment;
 import com.example.spring_restapi.dto.request.CreateCommentRequest;
 import com.example.spring_restapi.dto.request.UpdateCommentRequest;
 import com.example.spring_restapi.repository.CommentRepository;

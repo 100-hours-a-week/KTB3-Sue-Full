@@ -1,8 +1,15 @@
 package com.example.spring_restapi.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class CommonResponse<T> {
+    @Schema(description = "응답 메시지", example = "로그인 성공")
     private String message;
+
+    @Schema(description = "응답 데이터", example = "email: osj1405@naver.com, password: osj1405")
     private T data;
+
+    @Schema(description = "응답 에러", example = "error message")
     private Object error;
 
     public CommonResponse(String message, T data, Object error){
