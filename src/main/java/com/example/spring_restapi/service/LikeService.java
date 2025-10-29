@@ -23,24 +23,33 @@ public class LikeService {
         this.postRepository = postRepository;
     }
 
-    public Like like(Long post_id, UserIdBodyRequest req){
+    private Like validate(Long post_id, UserIdBodyRequest req){
+
         if(userRepository.findUserById(req.getUser_id()).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
+
         if(postRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
         Optional<Like> existing = likeRepository.findLikeByPostId(post_id);
+
         if(existing.isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
         Like like = existing.get();
 
-        if(like.isLikedByUser(req.getUser_id())){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "already_like");
+        if(!like.isLikedByUser(req.getUser_id())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
+
+        return like;
+    }
+
+    public Like like(Long post_id, UserIdBodyRequest req){
+        Like like = validate(post_id, req);
 
         like.like(req.getUser_id());
 
@@ -55,22 +64,7 @@ public class LikeService {
     }
 
     public Like unlike(Long post_id, UserIdBodyRequest req){
-        if(userRepository.findUserById(req.getUser_id()).isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-        if(postRepository.findPostByPostId(post_id).isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-       Optional<Like> existing = likeRepository.findLikeByPostId(post_id);
-        if(existing.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-        }
-
-        Like like = existing.get();
-
-        if(!like.isLikedByUser(req.getUser_id())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-        }
+        Like like = validate(post_id, req);
 
         like.unlike(req.getUser_id());
 
