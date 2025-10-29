@@ -45,8 +45,9 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<User> existing = userRepository.findUserByEmail(user.getEmail());
-        if(existing.isPresent()){
+        Optional<User> findUser = userRepository.findUserByEmail(user.getEmail());
+
+        if(findUser.isPresent()){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already_exists");
         }
 
@@ -62,26 +63,27 @@ public class UserService {
 
         User data = userRepository.save(newUser);
 
-        SignUpResponse res = new SignUpResponse(data.getUser_id(), data.getEmail(), data.getNickname(), data.getProfileImage(), data.getIntroduce());
-        return res;
+        return new SignUpResponse(data.getUser_id(), data.getEmail(), data.getNickname(), data.getProfileImage(), data.getIntroduce());
     }
 
     public User updateUser(Long user_id, UpdateUserRequest user){
-        Optional<User> existing = userRepository.findUserById(user_id);
-        if(existing.isEmpty()){
+
+        Optional<User> findUser = userRepository.findUserById(user_id);
+        if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
         // 비번 체크도 하기
-        if(!existing.get().getPassword().equals(user.getCurrentPassword())){
+        if(!findUser.get().getPassword().equals(user.getCurrentPassword())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        User data = existing.get();
+        User data = findUser.get();
 
         if(!user.getNewPassword().isEmpty()){
             data.setPassword(user.getNewPassword());
         }
+
         data.setNickname(user.getNickname());
         data.setProfileImage(user.getProfile_image());
         data.setIntroduce(user.getIntroduce());
@@ -95,12 +97,12 @@ public class UserService {
     }
 
     public User removeUser(Long user_id){
-        Optional<User> removeUser = userRepository.findUserById(user_id);
-        if(removeUser.isEmpty()){
+        Optional<User> findUser = userRepository.findUserById(user_id);
+        if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return userRepository.deleteUserById(removeUser.get().getUser_id());
+        return userRepository.deleteUserById(findUser.get().getUser_id());
     }
 
     public List<User> getAllUsers(){
