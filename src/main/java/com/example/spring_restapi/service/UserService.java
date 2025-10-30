@@ -11,6 +11,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Optional;
 
+
+interface UpdateMethod {
+    User update();
+}
+
 @Service
 public class UserService {
     private final UserRepository userRepository;

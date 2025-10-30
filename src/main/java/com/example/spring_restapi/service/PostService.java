@@ -76,17 +76,18 @@ public class PostService {
     }
 
     public Post updatePost(Long post_id, UpdatePostRequest req){
-        Optional<Post> existing = postRepository.findPostByPostId(post_id);
-        if(existing.isEmpty()){
+        Optional<Post> findPost = postRepository.findPostByPostId(post_id);
+        if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
         // 작성자만 수정 가능
-        if(!existing.get().getAuthor_id().equals(req.getUser_id())){
+        if(!findPost.get().getAuthor_id().equals(req.getUser_id())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Post data = existing.get();
+        Post data = findPost.get();
+
         data.setTitle(req.getTitle());
         data.setContent(req.getContent());
         data.setImages(req.getImages());
@@ -102,15 +103,14 @@ public class PostService {
     }
 
     public Post deletePost(Long post_id, Long user_id){
-        Optional<Post> existing = postRepository.findPostByPostId(post_id);
-        if(existing.isEmpty()){
+        Optional<Post> findPost = postRepository.findPostByPostId(post_id);
+        if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Post find = existing.get();
+        Post find = findPost.get();
         // 작성자만 삭제 가능
-        System.out.println(find.getAuthor_id());
-        System.out.println(user_id);
+
         if(!find.getAuthor_id().equals(user_id)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }

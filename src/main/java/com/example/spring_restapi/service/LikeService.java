@@ -39,17 +39,16 @@ public class LikeService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Like like = existing.get();
 
-        if(!like.isLikedByUser(req.getUser_id())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-        }
-
-        return like;
+        return existing.get();
     }
 
     public Like like(Long post_id, UserIdBodyRequest req){
         Like like = validate(post_id, req);
+
+        if(like.isLikedByUser(req.getUser_id())){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "already_likes");
+        }
 
         like.like(req.getUser_id());
 
@@ -65,6 +64,10 @@ public class LikeService {
 
     public Like unlike(Long post_id, UserIdBodyRequest req){
         Like like = validate(post_id, req);
+
+        if(!like.isLikedByUser(req.getUser_id())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
+        }
 
         like.unlike(req.getUser_id());
 
