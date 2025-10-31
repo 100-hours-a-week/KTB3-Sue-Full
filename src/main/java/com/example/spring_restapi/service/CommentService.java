@@ -16,12 +16,12 @@ import java.util.Optional;
 
 @Service
 public class CommentService {
-    private final CommentRepository commentRepository;
+    private final CommentRepository databaseCommentRepository;
     private final PostRepository databasePostRepository;
     private final UserRepository databaseUserRepository;
 
-    public CommentService(CommentRepository commentRepository, PostRepository databasePostRepository, UserRepository databaseUserRepository){
-        this.commentRepository = commentRepository;
+    public CommentService(CommentRepository databaseCommentRepository, PostRepository databasePostRepository, UserRepository databaseUserRepository){
+        this.databaseCommentRepository = databaseCommentRepository;
         this.databasePostRepository = databasePostRepository;
         this.databaseUserRepository = databaseUserRepository;
     }
@@ -31,7 +31,7 @@ public class CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return commentRepository.findCommentByPosId(post_id);
+        return databaseCommentRepository.findCommentByPosId(post_id);
     }
 
     public Comment writeComment(Long post_id, CreateCommentRequest req){
@@ -45,7 +45,7 @@ public class CommentService {
 
         Comment newComment = new Comment(null, post_id, req.getAuthor_id(), req.getContent(), LocalDateTime.now());
 
-        return commentRepository.save(newComment);
+        return databaseCommentRepository.save(newComment);
     }
 
     public Comment updateComment(Long post_id, Long comment_id, UpdateCommentRequest req){
@@ -57,7 +57,7 @@ public class CommentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<Comment> find = commentRepository.findCommentByCommentId(comment_id);
+        Optional<Comment> find = databaseCommentRepository.findCommentByCommentId(comment_id);
 
         if(find.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -67,7 +67,7 @@ public class CommentService {
         update.setContent(req.getContent());
         update.setRewriteDate(LocalDateTime.now());
 
-        Optional<Comment> updateComment = commentRepository.update(update);
+        Optional<Comment> updateComment = databaseCommentRepository.update(update);
 
         if(updateComment.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -81,7 +81,7 @@ public class CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Optional<Comment> find = commentRepository.findCommentByCommentId(comment_id);
+        Optional<Comment> find = databaseCommentRepository.findCommentByCommentId(comment_id);
 
         if(find.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -91,7 +91,7 @@ public class CommentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        return commentRepository.deleteComment(find.get());
+        return databaseCommentRepository.deleteComment(find.get());
     }
 
 }
