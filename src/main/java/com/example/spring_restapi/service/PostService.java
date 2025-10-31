@@ -16,11 +16,11 @@ import java.util.Optional;
 
 @Service
 public class PostService {
-    private final PostRepository postRepository;
+    private final PostRepository databasePostRepository;
     private final UserRepository userRepository;
 
-    public PostService(PostRepository postRepository, UserRepository userRepository){
-        this.postRepository = postRepository;
+    public PostService(PostRepository databasePostRepository, UserRepository userRepository){
+        this.databasePostRepository = databasePostRepository;
         this.userRepository = userRepository;
     }
 
@@ -38,11 +38,11 @@ public class PostService {
 
         // 로그인된 유저인지 토큰 확인 로직 추가 예정
 
-        return postRepository.save(newPost);
+        return databasePostRepository.save(newPost);
     }
 
     public Post getPostByPostId(Long post_id){
-        Optional<Post> findPost = postRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -51,7 +51,7 @@ public class PostService {
     }
 
     public List<Post> getPostByAuthorId(Long authorId) {
-        List<Post> posts = postRepository.findPostByPostAuthorId(authorId);
+        List<Post> posts = databasePostRepository.findPostByPostAuthorId(authorId);
         if (posts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -59,7 +59,7 @@ public class PostService {
     }
 
     public List<Post> findAllPosts(){
-        return postRepository.findAllPost();
+        return databasePostRepository.findAllPost();
     }
 
     public List<Post> getPostsOfPage(int page, int size){
@@ -67,7 +67,7 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<List<Post>> findPost = postRepository.findPostsOfPage(page, size);
+        Optional<List<Post>> findPost = databasePostRepository.findPostsOfPage(page, size);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -76,7 +76,7 @@ public class PostService {
     }
 
     public Post updatePost(Long post_id, UpdatePostRequest req){
-        Optional<Post> findPost = postRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -94,7 +94,7 @@ public class PostService {
 
         data.setRewriteDate(LocalDateTime.now());
 
-        Optional<Post> updatePost =  postRepository.update(data);
+        Optional<Post> updatePost =  databasePostRepository.update(data);
         if(updatePost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -103,7 +103,7 @@ public class PostService {
     }
 
     public Post deletePost(Long post_id, Long user_id){
-        Optional<Post> findPost = postRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -115,7 +115,7 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        return postRepository.deletePostByPostId(post_id);
+        return databasePostRepository.deletePostByPostId(post_id);
     }
 
 }

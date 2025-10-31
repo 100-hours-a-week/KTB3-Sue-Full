@@ -15,12 +15,12 @@ import java.util.Optional;
 public class LikeService {
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
-    private final PostRepository postRepository;
+    private final PostRepository databasePostRepository;
 
-    public LikeService(LikeRepository likeRepository, UserRepository userRepository, PostRepository postRepository){
+    public LikeService(LikeRepository likeRepository, UserRepository userRepository, PostRepository databasePostRepository){
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
-        this.postRepository = postRepository;
+        this.databasePostRepository = databasePostRepository;
     }
 
     private Like validate(Long post_id, UserIdBodyRequest req){
@@ -29,7 +29,7 @@ public class LikeService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(postRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 

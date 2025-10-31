@@ -17,17 +17,17 @@ import java.util.Optional;
 @Service
 public class CommentService {
     private final CommentRepository commentRepository;
-    private final PostRepository postRepository;
+    private final PostRepository databasePostRepository;
     private final UserRepository userRepository;
 
-    public CommentService(CommentRepository commentRepository, PostRepository postRepository, UserRepository userRepository){
+    public CommentService(CommentRepository commentRepository, PostRepository databasePostRepository, UserRepository userRepository){
         this.commentRepository = commentRepository;
-        this.postRepository = postRepository;
+        this.databasePostRepository = databasePostRepository;
         this.userRepository = userRepository;
     }
 
     public List<Comment> getCommentsByPostId(Long post_id){
-        if(postRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
@@ -35,7 +35,7 @@ public class CommentService {
     }
 
     public Comment writeComment(Long post_id, CreateCommentRequest req){
-        if(postRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
@@ -49,7 +49,7 @@ public class CommentService {
     }
 
     public Comment updateComment(Long post_id, Long comment_id, UpdateCommentRequest req){
-        if(postRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
@@ -77,7 +77,7 @@ public class CommentService {
     }
 
     public Comment deleteComment(Long post_id, Long comment_id, Long user_id){
-        if(postRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
