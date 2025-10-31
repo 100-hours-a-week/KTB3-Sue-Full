@@ -18,10 +18,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/posts")
 public class PostController {
-    private final PostService postService;
+    private final PostService postServiceImpl;
 
-    public PostController(PostService postService){
-        this.postService = postService;
+    public PostController(PostService postServiceImpl){
+        this.postServiceImpl = postServiceImpl;
     }
 
     @Operation(summary = "게시물 조회", description = "한 페이지당 최대 10개의 게시물을 조회")
@@ -34,7 +34,7 @@ public class PostController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ){
-        List<Post> posts = postService.getPostsOfPage(page,size);
+        List<Post> posts = postServiceImpl.getPostsOfPage(page,size);
 
         ReadPostByPageResponse data = new ReadPostByPageResponse(posts);
         CommonResponse<ReadPostByPageResponse> res = CommonResponse.success("read_posts_success", data);
@@ -49,7 +49,7 @@ public class PostController {
     })
     @GetMapping("/{post_id}")
     public ResponseEntity<CommonResponse<Post>> readPostsById(@PathVariable Long post_id){
-        Post data = postService.getPostByPostId(post_id);
+        Post data = postServiceImpl.getPostByPostId(post_id);
 
         CommonResponse<Post> res = CommonResponse.success("read_post_success", data);
         return ResponseEntity.ok(res);
@@ -61,7 +61,7 @@ public class PostController {
     })
     @PostMapping
     public ResponseEntity<CommonResponse<Post>> writePost(@RequestBody CreatePostRequest req){
-        Post data = postService.write(req);
+        Post data = postServiceImpl.write(req);
 
         CommonResponse<Post> res = CommonResponse.success("write_post_success", data);
         return ResponseEntity.status(201).body(res);
@@ -75,7 +75,7 @@ public class PostController {
     })
     @PatchMapping("/{post_id}")
     public ResponseEntity<CommonResponse<Post>> updatePost(@PathVariable Long post_id, @RequestBody UpdatePostRequest req){
-        Post data = postService.updatePost(post_id, req);
+        Post data = postServiceImpl.updatePost(post_id, req);
 
         CommonResponse<Post> res = CommonResponse.success("update_post_success", data);
 
@@ -90,7 +90,7 @@ public class PostController {
     })
     @DeleteMapping("/{post_id}")
     public ResponseEntity<CommonResponse<Long>> deletePost(@PathVariable Long post_id, @RequestBody DeletePostRequest req){
-        Post data = postService.deletePost(post_id, req.getUser_id());
+        Post data = postServiceImpl.deletePost(post_id, req.getUser_id());
 
         CommonResponse<Long> res = CommonResponse.success("delete_post_success", data.getPost_id());
 

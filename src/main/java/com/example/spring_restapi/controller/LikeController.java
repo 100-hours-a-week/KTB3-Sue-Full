@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/posts/{post_id}/likes")
 public class LikeController {
-    private final LikeService likeService;
+    private final LikeService likeServiceImpl;
 
-    public LikeController(LikeService likeService){
-        this.likeService = likeService;
+    public LikeController(LikeService likeServiceImpl){
+        this.likeServiceImpl = likeServiceImpl;
     }
 
     @Operation(summary = "좋아요 누르기", description = "게시물에 좋아요를 누름")
@@ -29,7 +29,7 @@ public class LikeController {
             @PathVariable Long post_id,
             @RequestBody UserIdBodyRequest req
             ){
-        Like like = likeService.like(post_id, req);
+        Like like = likeServiceImpl.like(post_id, req);
 
         CommonResponse<Like> res = CommonResponse.success("like_success", like);
         return ResponseEntity.status(201).body(res);
@@ -44,7 +44,7 @@ public class LikeController {
     public ResponseEntity<CommonResponse<Integer>> getLikeCount(
             @PathVariable Long post_id
     ){
-        int likeCount = likeService.getLikeCount(post_id);
+        int likeCount = likeServiceImpl.getLikeCount(post_id);
 
         CommonResponse<Integer> res = CommonResponse.success("read_like_success", likeCount);
         return ResponseEntity.ok(res);
@@ -61,7 +61,7 @@ public class LikeController {
             @PathVariable Long post_id,
             @RequestBody UserIdBodyRequest req
     ){
-        Like like = likeService.unlike(post_id, req);
+        Like like = likeServiceImpl.unlike(post_id, req);
 
         CommonResponse<Like> res = CommonResponse.success("unlike_success", like);
         return ResponseEntity.ok(res);

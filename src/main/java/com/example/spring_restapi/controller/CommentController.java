@@ -17,10 +17,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/posts/{post_id}/comments")
 public class CommentController {
-    private final CommentService commentService;
+    private final CommentService commentServiceImpl;
 
-    public CommentController(CommentService commentService){
-        this.commentService = commentService;
+    public CommentController(CommentService commentServiceImpl){
+        this.commentServiceImpl = commentServiceImpl;
     }
 
     @Operation(summary = "댓글 조회", description = "특정 게시물의 댓글을 조회함")
@@ -30,7 +30,7 @@ public class CommentController {
     })
     @GetMapping
     public ResponseEntity<CommonResponse<List<Comment>>> readCommentsByPostId(@PathVariable Long post_id){
-        List<Comment> data = commentService.getCommentsByPostId(post_id);
+        List<Comment> data = commentServiceImpl.getCommentsByPostId(post_id);
 
         CommonResponse<List<Comment>> res = CommonResponse.success("read_comments_success", data);
 
@@ -44,7 +44,7 @@ public class CommentController {
     })
     @PostMapping
     public ResponseEntity<CommonResponse<Comment>> writeComment(@PathVariable Long post_id, @RequestBody CreateCommentRequest req){
-        Comment data = commentService.writeComment(post_id, req);
+        Comment data = commentServiceImpl.writeComment(post_id, req);
 
         CommonResponse<Comment> res = CommonResponse.success("write_comment_success", data);
 
@@ -59,7 +59,7 @@ public class CommentController {
     })
     @PutMapping("/{comment_id}")
     public ResponseEntity<CommonResponse<Comment>> updateComment(@PathVariable Long post_id, @PathVariable Long comment_id, @RequestBody UpdateCommentRequest req){
-        Comment data = commentService.updateComment(post_id, comment_id, req);
+        Comment data = commentServiceImpl.updateComment(post_id, comment_id, req);
 
         CommonResponse<Comment> res = CommonResponse.success("update_comment_success", data);
 
@@ -74,7 +74,7 @@ public class CommentController {
     })
     @DeleteMapping("/{comment_id}")
     public ResponseEntity<CommonResponse<Comment>> deleteComment(@PathVariable Long post_id, @PathVariable Long comment_id, @RequestBody UserIdBodyRequest req){
-        Comment data = commentService.deleteComment(post_id, comment_id, req.getUser_id());
+        Comment data = commentServiceImpl.deleteComment(post_id, comment_id, req.getUser_id());
 
         CommonResponse<Comment> res = CommonResponse.success("delete_comment_success", data);
 
