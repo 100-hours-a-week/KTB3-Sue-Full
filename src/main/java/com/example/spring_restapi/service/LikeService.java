@@ -13,12 +13,12 @@ import java.util.Optional;
 
 @Service
 public class LikeService {
-    private final LikeRepository likeRepository;
+    private final LikeRepository databaseLikeRepository;
     private final UserRepository databaseUserRepository;
     private final PostRepository databasePostRepository;
 
-    public LikeService(LikeRepository likeRepository, UserRepository databaseUserRepository, PostRepository databasePostRepository){
-        this.likeRepository = likeRepository;
+    public LikeService(LikeRepository databaseLikeRepository, UserRepository databaseUserRepository, PostRepository databasePostRepository){
+        this.databaseLikeRepository = databaseLikeRepository;
         this.databaseUserRepository = databaseUserRepository;
         this.databasePostRepository = databasePostRepository;
     }
@@ -33,7 +33,7 @@ public class LikeService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Optional<Like> existing = likeRepository.findLikeByPostId(post_id);
+        Optional<Like> existing = databaseLikeRepository.findLikeByPostId(post_id);
 
         if(existing.isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
@@ -56,7 +56,7 @@ public class LikeService {
     }
 
     public Integer getLikeCount(Long post_id){
-        Optional<Like> findLike = likeRepository.findLikeByPostId(post_id);
+        Optional<Like> findLike = databaseLikeRepository.findLikeByPostId(post_id);
         if(findLike.isEmpty()) return null;
 
         return findLike.get().getLikedUserIds().size();
