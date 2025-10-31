@@ -17,11 +17,11 @@ import java.util.Optional;
 @Service
 public class PostService {
     private final PostRepository databasePostRepository;
-    private final UserRepository userRepository;
+    private final UserRepository databaseUserRepository;
 
-    public PostService(PostRepository databasePostRepository, UserRepository userRepository){
+    public PostService(PostRepository databasePostRepository, UserRepository databaseUserRepository){
         this.databasePostRepository = databasePostRepository;
-        this.userRepository = userRepository;
+        this.databaseUserRepository = databaseUserRepository;
     }
 
     public Post write(CreatePostRequest req){
@@ -29,7 +29,7 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<User> findUser = userRepository.findUserById(req.getAuthor_id());
+        Optional<User> findUser = databaseUserRepository.findUserById(req.getAuthor_id());
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }

@@ -31,6 +31,7 @@ public class DatabasePostRepository implements PostRepository {
         save(post3);
     }
 
+    @Override
     public Post save(Post post){
         sequence++;
         if(Optional.ofNullable(post.getPost_id()).isEmpty()){
@@ -40,6 +41,7 @@ public class DatabasePostRepository implements PostRepository {
         return postMap.get(post.getPost_id());
     }
 
+    @Override
     public List<Post> findAllPost(){
         List<Post> posts = new ArrayList<>();
         for(Long post_id: postMap.keySet()){
@@ -50,6 +52,7 @@ public class DatabasePostRepository implements PostRepository {
         return posts;
     }
 
+    @Override
     public Optional<List<Post>> findPostsOfPage(int page, int size){
         List<Post> posts = new ArrayList<>(postMap.values());
 
@@ -71,10 +74,12 @@ public class DatabasePostRepository implements PostRepository {
         return Optional.of(posts.subList(startIndex, endIndex));
     }
 
+    @Override
     public Optional<Post> findPostByPostId(Long post_id){
         return Optional.ofNullable(postMap.get(post_id));
     }
 
+    @Override
     public List<Post> findPostByPostAuthorId(Long author_id){
         List<Post> findPost = new ArrayList<>();
         for(Map.Entry<Long, Post> entry : postMap.entrySet()){
@@ -86,10 +91,12 @@ public class DatabasePostRepository implements PostRepository {
         return findPost;
     }
 
+    @Override
     public Optional<Post> update(Post post){
         return Optional.ofNullable(postMap.put(post.getPost_id(), post));
     }
 
+    @Override
     public Post deletePostByPostId(Long post_id){
         return postMap.remove(post_id);
     }

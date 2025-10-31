@@ -11,17 +11,21 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Optional;
 
-
-interface UpdateMethod {
-    User update();
-}
-
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+    private final UserRepository databaseUserRepository;
 
-    public UserService(UserRepository userRepository){
-        this.userRepository = userRepository;
+    private final UpdateUserService<User, UpdateUserRequest> updateUserInfo;
+    private final UpdateUserService<User, UpdatePasswordRequest> updateUserPassword;
+
+    public UserService(
+            UserRepository databaseUserRepository,
+            UpdateUserService<User, UpdateUserRequest> updateUserInfo,
+            UpdateUserService<User, UpdatePasswordRequest> updateUserPassword
+    ){
+        this.databaseUserRepository = databaseUserRepository;
+        this.updateUserInfo = updateUserInfo;
+        this.updateUserPassword = updateUserPassword;
     }
 
     public User login(LoginRequest user){
@@ -29,7 +33,7 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<User> findUser = userRepository.findUserByEmail(user.getEmail());
+        Optional<User> findUser = databaseUserRepository.findUserByEmail(user.getEmail());
 
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found");
@@ -50,7 +54,7 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<User> findUser = userRepository.findUserByEmail(user.getEmail());
+        Optional<User> findUser = databaseUserRepository.findUserByEmail(user.getEmail());
 
         if(findUser.isPresent()){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already_exists");
@@ -66,88 +70,42 @@ public class UserService {
                 null
         );
 
-        User data = userRepository.save(newUser);
+        User data = databaseUserRepository.save(newUser);
 
         return new SignUpResponse(data.getUser_id(), data.getEmail(), data.getNickname(), data.getProfileImage(), data.getIntroduce());
     }
 
     public User updateUser(Long user_id, UpdateUserRequest user){
-
-        Optional<User> findUser = userRepository.findUserById(user_id);
-        if(findUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        // 비번 체크도 하기
-        if(!findUser.get().getPassword().equals(user.getCurrentPassword())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-        }
-
-        User data = findUser.get();
-
-        if(!user.getNewPassword().isEmpty()){
-            data.setPassword(user.getNewPassword());
-        }
-
-        data.setNickname(user.getNickname());
-        data.setProfileImage(user.getProfile_image());
-        data.setIntroduce(user.getIntroduce());
-
-        Optional<User> updateUser = userRepository.update(data);
-        if(updateUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        return updateUser.get();
+        return updateUserInfo.update(user_id, user);
     }
 
     public User removeUser(Long user_id){
-        Optional<User> findUser = userRepository.findUserById(user_id);
+        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return userRepository.deleteUserById(findUser.get().getUser_id());
+        return databaseUserRepository.deleteUserById(findUser.get().getUser_id());
     }
 
     public List<User> getAllUsers(){
-        return userRepository.findAllUser();
+        return databaseUserRepository.findAllUser();
     }
 
     public User getUserById(Long user_id){
-        return userRepository.findUserById(user_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
+        return databaseUserRepository.findUserById(user_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
     }
 
     public User getUserByEmail(String email){
-        return userRepository.findUserByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
+        return databaseUserRepository.findUserByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
     }
 
     public User updateUserPassword(Long user_id, UpdatePasswordRequest req){
-        Optional<User> findUser = userRepository.findUserById(user_id);
-
-        if(findUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        User user = findUser.get();
-
-        System.out.println(user.getPassword());
-        if(!findUser.get().getPassword().equals(req.getCurrentPassword())){
-            System.out.println(req.getCurrentPassword());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-        }
-
-        user.setPassword(req.getNewPassword());
-        Optional<User> updateUser = userRepository.update(user);
-        if(updateUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        return updateUser.get();
+        return updateUserPassword.update(user_id, req);
     }
 
     public User updateUserNickname(Long user_id, UpdateUserNicknameRequest req){
-        Optional<User> findUser = userRepository.findUserById(user_id);
+        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
 
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -160,7 +118,7 @@ public class UserService {
     }
 
     public User updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req){
-        Optional<User> findUser = userRepository.findUserById(user_id);
+        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
 
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -173,7 +131,7 @@ public class UserService {
     }
 
     public User updateUserIntroduce(Long user_id, UpdateUserIntroduceRequest req){
-        Optional<User> findUser = userRepository.findUserById(user_id);
+        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
 
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");

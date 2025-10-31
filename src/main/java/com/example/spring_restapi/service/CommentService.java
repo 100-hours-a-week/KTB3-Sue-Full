@@ -18,12 +18,12 @@ import java.util.Optional;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository databasePostRepository;
-    private final UserRepository userRepository;
+    private final UserRepository databaseUserRepository;
 
-    public CommentService(CommentRepository commentRepository, PostRepository databasePostRepository, UserRepository userRepository){
+    public CommentService(CommentRepository commentRepository, PostRepository databasePostRepository, UserRepository databaseUserRepository){
         this.commentRepository = commentRepository;
         this.databasePostRepository = databasePostRepository;
-        this.userRepository = userRepository;
+        this.databaseUserRepository = databaseUserRepository;
     }
 
     public List<Comment> getCommentsByPostId(Long post_id){
@@ -39,7 +39,7 @@ public class CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(userRepository.findUserById(req.getAuthor_id()).isEmpty()){
+        if(databaseUserRepository.findUserById(req.getAuthor_id()).isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
@@ -53,7 +53,7 @@ public class CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(userRepository.findUserById(req.getAuthor_id()).isEmpty()){
+        if(databaseUserRepository.findUserById(req.getAuthor_id()).isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 

@@ -14,18 +14,18 @@ import java.util.Optional;
 @Service
 public class LikeService {
     private final LikeRepository likeRepository;
-    private final UserRepository userRepository;
+    private final UserRepository databaseUserRepository;
     private final PostRepository databasePostRepository;
 
-    public LikeService(LikeRepository likeRepository, UserRepository userRepository, PostRepository databasePostRepository){
+    public LikeService(LikeRepository likeRepository, UserRepository databaseUserRepository, PostRepository databasePostRepository){
         this.likeRepository = likeRepository;
-        this.userRepository = userRepository;
+        this.databaseUserRepository = databaseUserRepository;
         this.databasePostRepository = databasePostRepository;
     }
 
     private Like validate(Long post_id, UserIdBodyRequest req){
 
-        if(userRepository.findUserById(req.getUser_id()).isEmpty()){
+        if(databaseUserRepository.findUserById(req.getUser_id()).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
