@@ -1,13 +1,18 @@
 package com.example.spring_restapi.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Entity;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Entity
+@Getter @Setter
 public class Post {
     @Schema(description = "게시글 아이디", example = "1L")
-    private Long post_id;
+    private Long id;
 
     @Schema(description = "게시글 작성자 아이디", example = "2L")
     private Long author_id;
@@ -18,73 +23,32 @@ public class Post {
     @Schema(description = "게시글 내용", example = "오늘은 Swagger에 대해 배웠다...")
     private String content;
 
-    @Schema(description = "게시글 콘텐츠 이미지", example = "[post1.jpg, post2.jpg]")
-    private List<String> images;
-
     @Schema(description = "게시글의 조회수", example = "5")
     private Integer watch;
 
+    @Schema(description = "게시글의 좋아요 수", example = "3")
+    private Integer like_count;
+
+    @Schema(description = "게시글의 댓글 수", example = "1")
+    private Integer comment_count;
+
     @Schema(description = "게시글 작성 일자", example = "20251020T10:00:00")
-    private LocalDateTime date;
+    private LocalDateTime write_date;
 
     @Schema(description = "게시글 수정 일자", example = "20251022T10:00:00")
-    private LocalDateTime rewriteDate;
+    private LocalDateTime rewrite_date;
 
+    protected Post() {}
 
-    public Post(Long post_id, Long author_id, String title, String content, List<String> images, Integer watch, LocalDateTime date){
-        this.post_id = post_id;
+    public Post(Long author_id, String title, String content, Integer watch, Integer like_count, Integer comment_count, LocalDateTime write_date, LocalDateTime rewrite_date){
         this.author_id = author_id;
         this.title = title;
         this.content = content;
-        this.images = images;
         this.watch = watch;
-        this.date = date;
-    }
-    // Setter
-    public void setPost_id(Long post_id){
-        this.post_id = post_id;
-    }
-
-    public void setAuthor_id(Long author_id){
-        this.author_id = author_id;
+        this.like_count = like_count;
+        this.comment_count = comment_count;
+        this.write_date = write_date;
+        this.rewrite_date = rewrite_date;
     }
 
-    public void setTitle(String title){
-        this.title = title;
-    }
-
-    public void setContent(String content){
-        this.content = content;
-    }
-
-    public void setImages(List<String> images){
-        this.images = images;
-    }
-
-    public void setWatch(Integer watch){
-        this.watch = watch;
-    }
-
-    public void setDate(LocalDateTime date){
-        this.date = date;
-    }
-
-    public void setRewriteDate(LocalDateTime rewriteDate){
-        this.rewriteDate = rewriteDate;
-    }
-
-    // Getter
-    public Long getPost_id(){ return post_id; }
-
-    public Long getAuthor_id() { return author_id; }
-
-    public String getTitle() { return title; }
-
-    public String getContent() { return content; }
-
-    public List<String> getImages() { return images; }
-
-    public Integer getWatch() { return watch; }
-
-    public LocalDateTime getDate() { return date; }
 }

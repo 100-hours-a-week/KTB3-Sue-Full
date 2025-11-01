@@ -4,6 +4,7 @@ import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.dto.request.*;
 import com.example.spring_restapi.dto.response.SignUpResponse;
 import com.example.spring_restapi.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,15 +18,24 @@ public class UserServiceImpl implements UserService {
 
     private final UpdateUserService<User, UpdateUserRequest> updateUserInfo;
     private final UpdateUserService<User, UpdatePasswordRequest> updateUserPassword;
+    private final UpdateUserService<User, UpdateUserNicknameRequest> updateUserNickname;
+    private final UpdateUserService<User, UpdateUserProfileImageRequest> updateUserProfileImage;
+    private final UpdateUserService<User, UpdateUserIntroduceRequest> updateUserIntroduce;
 
     public UserServiceImpl(
             UserRepository databaseUserRepository,
-            UpdateUserService<User, UpdateUserRequest> updateUserInfo,
-            UpdateUserService<User, UpdatePasswordRequest> updateUserPassword
+            @Qualifier("updateUserInfo") UpdateUserService<User, UpdateUserRequest> updateUserInfo,
+            @Qualifier("updateUserPassword") UpdateUserService<User, UpdatePasswordRequest> updateUserPassword,
+            @Qualifier("updateUserNickname") UpdateUserService<User, UpdateUserNicknameRequest> updateUserNickname,
+            @Qualifier("updateUserProfileImage") UpdateUserService<User, UpdateUserProfileImageRequest> updateUserProfileImage,
+            @Qualifier("updateUserIntroduce") UpdateUserService<User, UpdateUserIntroduceRequest> updateUserIntroduce
     ){
         this.databaseUserRepository = databaseUserRepository;
         this.updateUserInfo = updateUserInfo;
         this.updateUserPassword = updateUserPassword;
+        this.updateUserNickname = updateUserNickname;
+        this.updateUserProfileImage = updateUserProfileImage;
+        this.updateUserIntroduce = updateUserIntroduce;
     }
 
     @Override
@@ -113,44 +123,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUserNickname(Long user_id, UpdateUserNicknameRequest req){
-        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
-
-        if(findUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        User user = findUser.get();
-
-        user.setNickname(req.getNickname());
-        return user;
-    }
+    public User updateUserNickname(Long user_id, UpdateUserNicknameRequest req) { return updateUserNickname.update(user_id, req); }
 
     @Override
-    public User updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req){
-        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
-
-        if(findUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        User user = findUser.get();
-
-        user.setProfileImage(req.getProfile_image());
-        return user;
-    }
+    public User updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req) { return updateUserProfileImage.update(user_id, req); }
 
     @Override
-    public User updateUserIntroduce(Long user_id, UpdateUserIntroduceRequest req){
-        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
-
-        if(findUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        User user = findUser.get();
-
-        user.setIntroduce(req.getIntroduce());
-        return user;
-    }
+    public User updateUserIntroduce(Long user_id, UpdateUserIntroduceRequest req) { return updateUserIntroduce.update(user_id, req); }
 }
