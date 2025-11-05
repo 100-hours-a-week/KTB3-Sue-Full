@@ -7,18 +7,28 @@ import java.util.Optional;
 
 public interface PostRepository {
 
-    Post save(Post post);
+    void save(Post post);
 
     List<Post> findAllPost();
 
-    Optional<List<Post>> findPostsOfPage(int page, int size);
+    List<Post> findPostsOfPage(int page, int size);
 
     Optional<Post> findPostByPostId(Long post_id);
 
     List<Post> findPostByPostAuthorId(Long author_id);
 
-    Optional<Post> update(Post post);
+    void update(Post post);
 
-    Post deletePostByPostId(Long post_id);
+    void readPostBySomeone(Post post);
+
+    void likeBySomeone(Long post_id);
+
+    void unlikeBySomeone(Long post_id);
+
+    void writeCommentBySomeone(Post post);
+
+    void deleteCommentBySomeone(Post post);
+
+    void deletePostByPostId(Long post_id);
 
 }

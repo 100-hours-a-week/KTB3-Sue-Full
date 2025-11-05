@@ -1,8 +1,9 @@
 package com.example.spring_restapi.service;
 
 import com.example.spring_restapi.dto.request.UpdateUserIntroduceRequest;
-import com.example.spring_restapi.model.User;
-import com.example.spring_restapi.repository.UserRepository;
+import com.example.spring_restapi.dto.response.UserProfileResponse;
+import com.example.spring_restapi.model.UserProfile;
+import com.example.spring_restapi.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,25 +13,27 @@ import java.util.Optional;
 
 @Service
 @Qualifier("updateUserIntroduce")
-public class UpdateUserIntroduceImpl implements UpdateUserService<User, UpdateUserIntroduceRequest>{
-    private final UserRepository databaseUserRepository;
+public class UpdateUserIntroduceImpl implements UpdateUserService<UserProfileResponse, UpdateUserIntroduceRequest> {
+    private final UserProfileRepository databaseUserProfileRepository;
 
 
-    public UpdateUserIntroduceImpl(UserRepository databaseUserRepository) {
-        this.databaseUserRepository = databaseUserRepository;
+    public UpdateUserIntroduceImpl(UserProfileRepository databaseUserRepository) {
+        this.databaseUserProfileRepository = databaseUserRepository;
     }
 
     @Override
-    public User update(Long user_id, UpdateUserIntroduceRequest req){
-        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
+    public UserProfileResponse update(Long user_id, UpdateUserIntroduceRequest req){
+        Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByUserId(user_id);
 
-        if(findUser.isEmpty()){
+        if(findUserProfile.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        User user = findUser.get();
+        UserProfile userProfile = findUserProfile.get();
 
-        user.setIntroduce(req.getIntroduce());
-        return user;
+        userProfile.changeIntroduce(req.getIntroduce());
+        databaseUserProfileRepository.updateIntroduce(user_id, req.getIntroduce());
+
+        return new UserProfileResponse(userProfile.getId(), userProfile.getNickname(), userProfile.getProfileImage(), userProfile.getIntroduce(), userProfile.getGender(), userProfile.getIsPrivate());
     }
 }

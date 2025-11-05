@@ -1,69 +1,122 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.User;
+import com.example.spring_restapi.model.UserRole;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Repository
 public class DatabaseUserRepository implements UserRepository{
-    private final Map<Long, User> userMap = new LinkedHashMap<>();
-    private long sequence;
 
-    public DatabaseUserRepository(){
-        sequence = 0;
-        User user1 = new User(null, "osj1405@naver.com", "osj1405", "sue", null, null, null);
-        User user2 = new User(null, "osujin35@naver.com", "osujin35", "sujin", null, null, null);
-        User user3 = new User(null, "duckjin1405@gmail.com", "duckjin1405", "osj", null, null, null);
+    @PersistenceContext
+    private EntityManager em;
 
-        save(user1);
-        save(user2);
-        save(user3);
+    protected DatabaseUserRepository() {}
+
+    @Override
+    @Transactional
+    public void save(User newUser){
+        em.persist(newUser);
     }
 
     @Override
-    public User save(User user){
-        sequence++;
-        if(Optional.ofNullable(user.getUser_id()).isEmpty()){
-            user.setUser_id(sequence);
-        }
-        userMap.put(user.getUser_id(), user);
-        return userMap.get(user.getUser_id());
-    }
-
-    @Override
+    @Transactional(readOnly = true)
     public List<User> findAllUser(){
-        List<User> users = new ArrayList<>();
-        for(Long user_id: userMap.keySet()){
-            User user = userMap.get(user_id);
-            users.add(user);
-        }
-        return users;
+        TypedQuery<User> query = em.createQuery(
+                "select u from User u",
+                User.class);
+
+        return query.getResultList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<User> findUserById(Long user_id){
-        return Optional.ofNullable(userMap.get(user_id));
+        List<User> query = em.createQuery("""
+                select u
+                from User u
+                where u.id = :user_id
+                """, User.class)
+                .setParameter("user_id", user_id)
+                .getResultList();
+
+        return query.stream().findFirst();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<User> findUserByEmail(String email){
-        for(Map.Entry<Long, User> entry: userMap.entrySet()){
-            User user = entry.getValue();
-            if(user.getEmail().equals(email)){
-                return Optional.of(user);
-            }
-        }
-        return Optional.empty();
+        TypedQuery<User> query = em.createQuery(
+                "select u from User u where u.email = :email", User.class
+        );
+
+        query.setParameter("email", email);
+        return query.getResultList().stream().findFirst();
     }
 
     @Override
-    public Optional<User> update(User user){
-        return Optional.ofNullable(userMap.put(user.getUser_id(), user));
+    @Transactional
+    public void update(User user){
+        User updateUser = em.find(User.class, user.getId());
+        updateUser.changeEmail(user.getEmail());
+        updateUser.changePassword(user.getPassword(), user.getPasswordConfirm());
+        updateUser.changeUserRole(user.getUserRole());
+        updateUser.setUpdatedAt(LocalDateTime.now());
+//        Query query = em.createQuery("""
+//                update User u
+//                set u.email = :email,
+//                    u.password = :password,
+//                    u.userRole = :userRole,
+//                    u.updatedAt = :updatedAt
+//                where u.id = :user_id
+//                """)
+//                .setParameter("email", user.getEmail())
+//                .setParameter("password", user.getPassword())
+//                .setParameter("userRole", user.getUserRole())
+//                .setParameter("updatedAt", LocalDateTime.now())
+//                .setParameter("user_id", user.getId());
+//
+//        int result = query.executeUpdate();
+//        System.out.println("수정된 row 수 = " + result);
+//        em.clear();
+    }
+
+
+    @Override
+    @Transactional
+    public void updateEmail(Long user_id, String email){
+        User updateUser = em.find(User.class, user_id);
+        updateUser.changeEmail(email);
+        updateUser.setUpdatedAt(LocalDateTime.now());
     }
 
     @Override
-    public User deleteUserById(Long user_id){
-        return userMap.remove(user_id);
+    @Transactional
+    public void updatePassword(Long user_id, String password, String passwordConfirm){
+        User updateUser = em.find(User.class, user_id);
+        updateUser.changePassword(password, passwordConfirm);
+        updateUser.setUpdatedAt(LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void updateUserRole(Long user_id, UserRole userRole){
+        User updateUser = em.find(User.class, user_id);
+        updateUser.changeUserRole(userRole);
+        updateUser.setUpdatedAt(LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserById(Long user_id){
+        User deleteUser = em.find(User.class, user_id);
+        deleteUser.setDeletedAt(LocalDateTime.now());
     }
 }

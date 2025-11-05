@@ -7,13 +7,13 @@ import java.util.Optional;
 
 public interface CommentRepository {
 
-    Comment save(Comment comment);
+    void save(Comment comment);
 
     Optional<Comment> update(Comment comment);
 
-    Comment deleteComment(Comment comment);
+    Optional<Comment> deleteComment(Comment comment);
 
     Optional<Comment> findCommentByCommentId(Long comment_id);
 
-    List<Comment> findCommentByPosId(Long post_id);
+    List<Comment> findCommentsByPosId(Long post_id);
 }

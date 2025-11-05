@@ -1,128 +1,271 @@
 package com.example.spring_restapi.service;
 
-import com.example.spring_restapi.model.Post;
-import com.example.spring_restapi.model.User;
+import com.example.spring_restapi.dto.response.PostImageResponse;
+import com.example.spring_restapi.dto.response.PostResponse;
+import com.example.spring_restapi.model.*;
 import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
+import com.example.spring_restapi.repository.PostImagesRepository;
 import com.example.spring_restapi.repository.PostRepository;
+import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl implements PostService {
     private final PostRepository databasePostRepository;
+    private final PostImagesRepository databasePostImageRepository;
     private final UserRepository databaseUserRepository;
+    private final UserProfileRepository databaseUserProfileRepository;
 
-    public PostServiceImpl(PostRepository databasePostRepository, UserRepository databaseUserRepository){
+    public PostServiceImpl(PostRepository databasePostRepository, PostImagesRepository databasePostImageRepository, UserRepository databaseUserRepository, UserProfileRepository databaseUserProfileRepository) {
         this.databasePostRepository = databasePostRepository;
+        this.databasePostImageRepository = databasePostImageRepository;
         this.databaseUserRepository = databaseUserRepository;
+        this.databaseUserProfileRepository = databaseUserProfileRepository;
     }
 
     @Override
-    public Post write(CreatePostRequest req){
-        if(req.getTitle().isEmpty() || req.getContent().isEmpty()){
+    public PostResponse write(CreatePostRequest req) {
+        if (req.getTitle().isEmpty() || req.getContent().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
         Optional<User> findUser = databaseUserRepository.findUserById(req.getAuthor_id());
-        if(findUser.isEmpty()){
+        if (findUser.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Post newPost = new Post(null, req.getAuthor_id(), req.getTitle(), req.getContent(), req.getImages(),0, LocalDateTime.now());
+        User user = findUser.get();
 
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(user.getId());
+        if (findProfile.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile profile = findProfile.get();
+        Post newPost = new Post(req.getTitle(), req.getContent(), req.getPostType(), user);
+
+
+        databasePostRepository.save(newPost);
         // 로그인된 유저인지 토큰 확인 로직 추가 예정
 
-        return databasePostRepository.save(newPost);
+        if (!req.getImages().isEmpty()) {
+            List<PostImages> images = req.getImages().stream().map(image -> PostImages.create(newPost, image, false)).toList();
+            images.getFirst().changeIsThumbNail();
+
+            for (PostImages image : images) {
+                databasePostImageRepository.save(image);
+            }
+        }
+
+        List<PostImageResponse> postImages = databasePostImageRepository
+                .findPostImagesByPostId(newPost.getId())
+                .stream()
+                .map(image -> new PostImageResponse(newPost.getId(), image.getImage_url(), image.getIsThumbnail()))
+                .collect(Collectors.toList());
+
+        return new PostResponse(
+                newPost.getId(),
+                profile.getNickname(),
+                profile.getProfileImage(),
+                newPost.getTitle(),
+                newPost.getContent(),
+                postImages,
+                newPost.getPostType(),
+                0,
+                0,
+                0,
+                newPost.getCreatedAt(),
+                newPost.getUpdatedAt());
     }
 
     @Override
-    public Post getPostByPostId(Long post_id){
+    public PostResponse getPostByPostId(Long post_id) {
         Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
-        if(findPost.isEmpty()){
+        if (findPost.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        return findPost.get();
+        Post post = findPost.get();
+        databasePostRepository.readPostBySomeone(post);
+
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId());
+
+        if (findProfile.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile profile = findProfile.get();
+
+        List<PostImageResponse> postImages = databasePostImageRepository.findPostImagesByPostId(post_id).stream().map(image -> new PostImageResponse(post_id, image.getImage_url(), image.getIsThumbnail())).collect(Collectors.toList());
+
+        return new PostResponse(
+                post.getId(),
+                profile.getNickname(),
+                profile.getProfileImage(),
+                post.getTitle(),
+                post.getContent(),
+                postImages,
+                post.getPostType(),
+                post.getWatch(),
+                post.getLikeCount(),
+                post.getCommentCount(),
+                post.getCreatedAt(),
+                post.getUpdatedAt());
     }
 
     @Override
-    public List<Post> getPostByAuthorId(Long authorId) {
+    public List<PostResponse> getPostByAuthorId(Long authorId) {
         List<Post> posts = databasePostRepository.findPostByPostAuthorId(authorId);
         if (posts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
-        return posts;
+
+        Optional<UserProfile> authorProfile = databaseUserProfileRepository.findProfileByUserId(authorId);
+        if (authorProfile.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile profile = authorProfile.get();
+
+        return posts.stream().map(post -> {
+                    List<PostImageResponse> images = databasePostImageRepository.findPostImagesByPostId(post.getId()).stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).collect(Collectors.toList());
+
+                    return new PostResponse(
+                            post.getId(),
+                            profile.getNickname(),
+                            profile.getProfileImage(),
+                            post.getTitle(),
+                            post.getContent(),
+                            images,
+                            post.getPostType(),
+                            post.getWatch(),
+                            post.getLikeCount(),
+                            post.getCommentCount(),
+                            post.getCreatedAt(),
+                            post.getUpdatedAt());
+                }
+        ).collect(Collectors.toList());
     }
 
     @Override
-    public List<Post> findAllPosts(){
-        return databasePostRepository.findAllPost();
-    }
-
-    @Override
-    public List<Post> getPostsOfPage(int page, int size){
+    @Transactional
+    public List<PostResponse> getPostsOfPage(int page, int size){
         if(page == 0 || size > 10){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<List<Post>> findPost = databasePostRepository.findPostsOfPage(page, size);
-        if(findPost.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-        // 권한 확인 로직 추가 예정
-        return findPost.get();
+        List<Post> findPost = databasePostRepository.findPostsOfPage(page, size);
+        // 권한 확인 로직 추가 예
+
+        return findPost.stream().map(post -> {
+            UserProfile profile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
+
+            List<PostImageResponse> images = databasePostImageRepository.findPostImagesByPostId(post.getId()).stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).collect(Collectors.toList());
+
+            return new PostResponse(
+                    post.getId(),
+                    profile.getNickname(),
+                    profile.getProfileImage(),
+                    post.getTitle(),
+                    post.getContent(),
+                    images,
+                    post.getPostType(),
+                    post.getWatch(),
+                    post.getLikeCount(),
+                    post.getCommentCount(),
+                    post.getCreatedAt(),
+                    post.getUpdatedAt()
+            );
+        }).collect(Collectors.toList());
     }
 
     @Override
-    public Post updatePost(Long post_id, UpdatePostRequest req){
+    public PostResponse updatePost(Long post_id, UpdatePostRequest req){
         Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
+        Optional<User> findUser = databaseUserRepository.findUserById(req.getAuthor_id());
+
+        if(findUser.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
         // 작성자만 수정 가능
-        if(!findPost.get().getAuthor_id().equals(req.getUser_id())){
+        if(!findPost.get().getAuthor().getId().equals(req.getAuthor_id())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
+        }
+
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(req.getAuthor_id());
+
+
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
         Post data = findPost.get();
 
-        data.setTitle(req.getTitle());
-        data.setContent(req.getContent());
-        data.setImages(req.getImages());
+        UserProfile profile = findProfile.get();
 
-        data.setRewriteDate(LocalDateTime.now());
+        data.changeTitle(req.getTitle());
+        data.changeContent(req.getContent());
+        data.changePostType(req.getPostType());
+        data.setUpdatedAt(LocalDateTime.now());
 
-        Optional<Post> updatePost =  databasePostRepository.update(data);
-        if(updatePost.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        databasePostRepository.update(data);
+
+        if (!req.getImages().isEmpty()) {
+            databasePostImageRepository.deleteAllPostImagesByPostId(data.getId());
+
+            List<PostImages> images = req.getImages().stream().map(image -> PostImages.create(data, image, false)).toList();
+            images.getFirst().changeIsThumbNail();
+
+            for (PostImages image : images) {
+                databasePostImageRepository.save(image);
+            }
         }
 
-        return updatePost.get();
+        List<PostImageResponse> images = databasePostImageRepository.findPostImagesByPostId(data.getId()).stream().map(image -> new PostImageResponse(data.getId(), image.getImage_url(),image.getIsThumbnail())).collect(Collectors.toList());
+
+        return new PostResponse(data.getId(), profile.getNickname(), profile.getProfileImage(), data.getTitle(), data.getContent(), images, data.getPostType(), data.getWatch(), data.getLikeCount(), data.getCommentCount(), data.getCreatedAt(), data.getUpdatedAt());
     }
 
     @Override
-    public Post deletePost(Long post_id, Long user_id){
+    public PostResponse deletePost(Long post_id, Long user_id){
         Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Post find = findPost.get();
-        // 작성자만 삭제 가능
+        Post post = findPost.get();
 
-        if(!find.getAuthor_id().equals(user_id)){
+        // 작성자만 삭제 가능
+        if(!post.getAuthor().getId().equals(user_id)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        return databasePostRepository.deletePostByPostId(post_id);
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(user_id);
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        databasePostRepository.deletePostByPostId(post_id);
+
+        UserProfile profile = findProfile.get();
+
+        List<PostImageResponse> postImages = databasePostImageRepository.deleteAllPostImagesByPostId(post_id).stream().map(postImage -> new PostImageResponse(post_id, postImage.getImage_url(), postImage.getIsThumbnail())).toList();
+
+        return new PostResponse(post.getId(), profile.getNickname(), profile.getProfileImage(), post.getTitle(), post.getContent(), postImages, post.getPostType(), post.getWatch(), post.getLikeCount(), post.getCommentCount(), post.getCreatedAt(), post.getUpdatedAt());
     }
 
 }

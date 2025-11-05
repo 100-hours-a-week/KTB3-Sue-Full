@@ -1,18 +1,20 @@
 package com.example.spring_restapi.service;
 
 import com.example.spring_restapi.dto.request.UpdatePasswordRequest;
+import com.example.spring_restapi.dto.response.UserInfoResponse;
 import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
 @Service
 @Qualifier("updateUserPassword")
-public class UpdateUserPasswordImpl implements UpdateUserService<User, UpdatePasswordRequest>{
+public class UpdateUserPasswordImpl implements UpdateUserService<UserInfoResponse, UpdatePasswordRequest>{
     private final UserRepository databaseUserRepository;
 
     public UpdateUserPasswordImpl(UserRepository databaseUserRepository){
@@ -20,28 +22,26 @@ public class UpdateUserPasswordImpl implements UpdateUserService<User, UpdatePas
     }
 
     @Override
-    public User update(Long id, UpdatePasswordRequest req){
-        Optional<User> findUser = databaseUserRepository.findUserById(id);
+    @Transactional
+    public UserInfoResponse update(Long user_id, UpdatePasswordRequest req){
+        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
 
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        User user = findUser.get();
+        User updateUser = findUser.get();
 
-        System.out.println(user.getPassword());
-        if(!findUser.get().getPassword().equals(req.getCurrentPassword())){
-            System.out.println(req.getCurrentPassword());
+        if(!updateUser.getPassword().equals(req.getCurrentPassword())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        user.setPassword(req.getNewPassword());
-        Optional<User> updateUser = databaseUserRepository.update(user);
-        if(updateUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
+        updateUser.changePassword(req.getNewPassword(), req.getNewPasswordConfirm());
 
-        return updateUser.get();
+        databaseUserRepository.update(updateUser);
+
+        return new UserInfoResponse(
+                updateUser.getId(), updateUser.getEmail(), updateUser.getUserRole()
+        );
     }
-
 }

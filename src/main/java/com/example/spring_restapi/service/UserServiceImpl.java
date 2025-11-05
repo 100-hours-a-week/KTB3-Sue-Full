@@ -1,45 +1,62 @@
 package com.example.spring_restapi.service;
 
+import com.example.spring_restapi.dto.response.UserInfoResponse;
+import com.example.spring_restapi.dto.response.UserProfileResponse;
+import com.example.spring_restapi.dto.response.UserResponse;
 import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.dto.request.*;
-import com.example.spring_restapi.dto.response.SignUpResponse;
+import com.example.spring_restapi.model.UserProfile;
+import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
+import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository databaseUserRepository;
+    private final UserProfileRepository databaseUserProfileRepository;
 
-    private final UpdateUserService<User, UpdateUserRequest> updateUserInfo;
-    private final UpdateUserService<User, UpdatePasswordRequest> updateUserPassword;
-    private final UpdateUserService<User, UpdateUserNicknameRequest> updateUserNickname;
-    private final UpdateUserService<User, UpdateUserProfileImageRequest> updateUserProfileImage;
-    private final UpdateUserService<User, UpdateUserIntroduceRequest> updateUserIntroduce;
+    private final UpdateUserService<UserInfoResponse, UpdateUserInfoRequest> updateUserInfo;
+    private final UpdateUserService<UserInfoResponse, UpdatePasswordRequest> updateUserPassword;
+    private final UpdateUserService<UserProfileResponse, UpdateUserNicknameRequest> updateUserNickname;
+    private final UpdateUserService<UserProfileResponse, UpdateUserProfileImageRequest> updateUserProfileImage;
+    private final UpdateUserService<UserProfileResponse, UpdateUserIntroduceRequest> updateUserIntroduce;
+    private final UpdateUserService<UserProfileResponse, UpdateUserGenderRequest> updateUserGender;
+    private final UpdateUserService<UserProfileResponse, UpdateUserProfileIsPrivateRequest> updateUserProfileIsPrivate;
 
     public UserServiceImpl(
             UserRepository databaseUserRepository,
-            @Qualifier("updateUserInfo") UpdateUserService<User, UpdateUserRequest> updateUserInfo,
-            @Qualifier("updateUserPassword") UpdateUserService<User, UpdatePasswordRequest> updateUserPassword,
-            @Qualifier("updateUserNickname") UpdateUserService<User, UpdateUserNicknameRequest> updateUserNickname,
-            @Qualifier("updateUserProfileImage") UpdateUserService<User, UpdateUserProfileImageRequest> updateUserProfileImage,
-            @Qualifier("updateUserIntroduce") UpdateUserService<User, UpdateUserIntroduceRequest> updateUserIntroduce
+            UserProfileRepository databaseUserProfileRepository,
+            @Qualifier("updateUserInfo") UpdateUserService<UserInfoResponse, UpdateUserInfoRequest> updateUserInfo,
+            @Qualifier("updateUserPassword") UpdateUserService<UserInfoResponse, UpdatePasswordRequest> updateUserPassword,
+            @Qualifier("updateUserNickname") UpdateUserService<UserProfileResponse, UpdateUserNicknameRequest> updateUserNickname,
+            @Qualifier("updateUserProfileImage") UpdateUserService<UserProfileResponse, UpdateUserProfileImageRequest> updateUserProfileImage,
+            @Qualifier("updateUserIntroduce") UpdateUserService<UserProfileResponse, UpdateUserIntroduceRequest> updateUserIntroduce,
+            @Qualifier("updateUserGender") UpdateUserService<UserProfileResponse, UpdateUserGenderRequest> updateUserGender,
+            @Qualifier("updateUserProfileIsPrivate") UpdateUserService<UserProfileResponse, UpdateUserProfileIsPrivateRequest> updateUserProfileIsPrivate
     ){
         this.databaseUserRepository = databaseUserRepository;
+        this.databaseUserProfileRepository = databaseUserProfileRepository;
+
         this.updateUserInfo = updateUserInfo;
+
         this.updateUserPassword = updateUserPassword;
         this.updateUserNickname = updateUserNickname;
         this.updateUserProfileImage = updateUserProfileImage;
         this.updateUserIntroduce = updateUserIntroduce;
+        this.updateUserGender = updateUserGender;
+        this.updateUserProfileIsPrivate = updateUserProfileIsPrivate;
     }
 
     @Override
-    public User login(LoginRequest req){
+    @Transactional
+    public UserResponse login(LoginRequest req){
         if(req.getEmail().isEmpty() || req.getPassword().isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
@@ -52,16 +69,33 @@ public class UserServiceImpl implements UserService {
 
         User loginUser = findUser.get();
 
-        // 비밀번호 오류
         if(!loginUser.getPassword().equals(req.getPassword())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid_credentials");
         }
 
-        return loginUser;
+
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(loginUser.getId());
+
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found");
+        }
+
+        UserProfile loginUserProfile = findProfile.get();
+
+        return new UserResponse(
+                loginUser.getId(),
+                loginUser.getEmail(),
+                loginUser.getUserRole(),
+                loginUserProfile.getNickname(),
+                loginUserProfile.getProfileImage(),
+                loginUserProfile.getIntroduce(),
+                loginUserProfile.getGender(),
+                loginUserProfile.getIsPrivate()) ;
     }
 
     @Override
-    public SignUpResponse signup(SignUpRequest req){
+    @Transactional
+    public UserResponse signup(SignUpRequest req){
         if(req.getEmail().isEmpty() || req.getPassword().isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
@@ -72,62 +106,145 @@ public class UserServiceImpl implements UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already_exists");
         }
 
-        User newUser = new User(
-                null, // 자동 생성
-                req.getEmail(),
-                req.getPassword(),
-                req.getNickname(),
-                req.getProfile_image(),
-                req.getIntroduce(),
-                null
-        );
+        User newUser = User.create(req.getEmail(), req.getPassword(), req.getPasswordConfirm(), req.getUserRole());
 
-        User data = databaseUserRepository.save(newUser);
+        UserProfile newUserProfile = UserProfile.create(req.getNickname(), req.getProfileImage(), req.getIntroduce(), req.getGender());
 
-        return new SignUpResponse(data.getUser_id(), data.getEmail(), data.getNickname(), data.getProfileImage(), data.getIntroduce());
+        databaseUserRepository.save(newUser);
+
+        newUserProfile.setUser(newUser);
+        databaseUserProfileRepository.save(newUserProfile);
+
+        return new UserResponse(
+                newUser.getId(),
+                newUser.getEmail(),
+                newUser.getUserRole(),
+                newUserProfile.getNickname(),
+                newUserProfile.getProfileImage(),
+                newUserProfile.getIntroduce(),
+                newUserProfile.getGender(),
+                newUserProfile.getIsPrivate());
     }
 
     @Override
-    public User updateUser(Long user_id, UpdateUserRequest req){
-        return updateUserInfo.update(user_id, req);
-    }
-
-    @Override
-    public User removeUser(Long user_id){
+    public UserResponse getUserById(Long user_id){
         Optional<User> findUser = databaseUserRepository.findUserById(user_id);
+
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return databaseUserRepository.deleteUserById(findUser.get().getUser_id());
+        User user = findUser.get();
+
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(user_id);
+
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile profile = findProfile.get();
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUserRole(),
+                profile.getNickname(),
+                profile.getProfileImage(),
+                profile.getIntroduce(),
+                profile.getGender(),
+                profile.getIsPrivate()
+        );
     }
 
     @Override
-    public List<User> getAllUsers(){
-        return databaseUserRepository.findAllUser();
+    public UserResponse getUserByEmail(String email){
+        Optional<User> findUser = databaseUserRepository.findUserByEmail(email);
+
+        if(findUser.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        User user = findUser.get();
+
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(user.getId());
+
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile profile = findProfile.get();
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUserRole(),
+                profile.getNickname(),
+                profile.getProfileImage(),
+                profile.getIntroduce(),
+                profile.getGender(),
+                profile.getIsPrivate()
+        );
     }
 
     @Override
-    public User getUserById(Long user_id){
-        return databaseUserRepository.findUserById(user_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
+    @Transactional
+    public UserInfoResponse updateUserInfo(Long user_id, UpdateUserInfoRequest req) {
+        return updateUserInfo.update(user_id, req);
     }
 
     @Override
-    public User getUserByEmail(String email){
-        return databaseUserRepository.findUserByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
+    @Transactional
+    public UserInfoResponse updateUserPassword(Long user_id, UpdatePasswordRequest req){
+       return updateUserPassword.update(user_id, req);
     }
 
     @Override
-    public User updateUserPassword(Long user_id, UpdatePasswordRequest req){
-        return updateUserPassword.update(user_id, req);
+    @Transactional
+    public UserProfileResponse updateUserNickname(Long user_id, UpdateUserNicknameRequest req){
+        return updateUserNickname.update(user_id, req);
     }
 
     @Override
-    public User updateUserNickname(Long user_id, UpdateUserNicknameRequest req) { return updateUserNickname.update(user_id, req); }
+    public UserProfileResponse updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req) {
+        return updateUserProfileImage.update(user_id, req);
+    }
 
     @Override
-    public User updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req) { return updateUserProfileImage.update(user_id, req); }
+    @Transactional
+    public UserProfileResponse updateUserIntroduce(Long user_id, UpdateUserIntroduceRequest req) {
+        return updateUserIntroduce.update(user_id, req);
+    }
 
     @Override
-    public User updateUserIntroduce(Long user_id, UpdateUserIntroduceRequest req) { return updateUserIntroduce.update(user_id, req); }
+    @Transactional
+    public UserProfileResponse updateUserGender(Long user_id, UpdateUserGenderRequest req){
+        return updateUserGender.update(user_id, req);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse updateUserProfileIsPrivate(Long user_id, UpdateUserProfileIsPrivateRequest req){
+        return updateUserProfileIsPrivate.update(user_id, req);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse removeUser(Long user_id){
+        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(user_id);
+
+        if(findUser.isEmpty() || findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        databaseUserRepository.deleteUserById(user_id);
+
+        databaseUserProfileRepository.deleteProfileByUserId(user_id);
+
+        User user = findUser.get();
+        UserProfile profile = findProfile.get();
+
+        return new UserResponse(user.getId(), user.getEmail(), user.getUserRole(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate());
+    }
+
 }

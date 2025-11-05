@@ -1,33 +1,34 @@
 package com.example.spring_restapi.service;
 
 import com.example.spring_restapi.dto.request.*;
-import com.example.spring_restapi.dto.response.SignUpResponse;
-import com.example.spring_restapi.model.User;
-
-import java.util.List;
+import com.example.spring_restapi.dto.response.UserInfoResponse;
+import com.example.spring_restapi.dto.response.UserProfileResponse;
+import com.example.spring_restapi.dto.response.UserResponse;
 
 public interface UserService {
 
-    User login(LoginRequest req);
+    UserResponse login(LoginRequest req);
 
-    SignUpResponse signup(SignUpRequest req);
+    UserResponse signup(SignUpRequest req);
 
-    User updateUser(Long user_id, UpdateUserRequest req);
+    UserResponse getUserById(Long user_id);
 
-    User removeUser(Long user_id);
+    UserResponse getUserByEmail(String email);
 
-    List<User> getAllUsers();
+    UserInfoResponse updateUserInfo(Long user_id, UpdateUserInfoRequest req);
 
-    User getUserById(Long user_id);
+    UserInfoResponse updateUserPassword(Long user_id, UpdatePasswordRequest req);
 
-    User getUserByEmail(String email);
+    UserProfileResponse updateUserNickname(Long user_id, UpdateUserNicknameRequest req);
 
-    User updateUserPassword(Long user_id, UpdatePasswordRequest req);
+    UserProfileResponse updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req);
 
-    User updateUserNickname(Long user_id, UpdateUserNicknameRequest req);
+    UserProfileResponse updateUserIntroduce(Long user_id, UpdateUserIntroduceRequest req);
 
-    User updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req);
+    UserProfileResponse updateUserGender(Long user_id, UpdateUserGenderRequest req);
 
-    User updateUserIntroduce(Long user_id, UpdateUserIntroduceRequest req);
+    UserProfileResponse updateUserProfileIsPrivate(Long user_id, UpdateUserProfileIsPrivateRequest req);
+
+    UserResponse removeUser(Long user_id);
 
 }

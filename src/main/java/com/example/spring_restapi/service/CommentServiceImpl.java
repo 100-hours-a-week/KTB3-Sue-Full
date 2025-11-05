@@ -1,8 +1,12 @@
 package com.example.spring_restapi.service;
 
+import com.example.spring_restapi.dto.response.CommentListResponse;
+import com.example.spring_restapi.dto.response.CommentResponse;
 import com.example.spring_restapi.model.Comment;
 import com.example.spring_restapi.dto.request.CreateCommentRequest;
 import com.example.spring_restapi.dto.request.UpdateCommentRequest;
+import com.example.spring_restapi.model.Post;
+import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.repository.CommentRepository;
 import com.example.spring_restapi.repository.PostRepository;
 import com.example.spring_restapi.repository.UserRepository;
@@ -27,37 +31,49 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<Comment> getCommentsByPostId(Long post_id){
+    public CommentListResponse getCommentsByPostId(Long post_id){
         if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return databaseCommentRepository.findCommentByPosId(post_id);
+        List<Comment> comments = databaseCommentRepository.findCommentsByPosId(post_id);
+        List<CommentResponse> data = comments.stream().map(comment -> new CommentResponse(comment.getId(), post_id, comment.getUser().getId(), comment.getContent())).toList();
+
+        return new CommentListResponse(post_id, data);
     }
 
     @Override
-    public Comment writeComment(Long post_id, CreateCommentRequest req){
-        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
+    public CommentResponse writeComment(Long post_id, CreateCommentRequest req){
+        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(databaseUserRepository.findUserById(req.getAuthor_id()).isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
+        Optional<User> findUser = databaseUserRepository.findUserById(req.getUser_id());
+
+        if(findUser.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Comment newComment = new Comment(null, post_id, req.getAuthor_id(), req.getContent(), LocalDateTime.now());
+        Comment newComment = new Comment(findPost.get(), findUser.get(), req.getContent());
 
-        return databaseCommentRepository.save(newComment);
+        databaseCommentRepository.save(newComment);
+        databasePostRepository.writeCommentBySomeone(findPost.get());
+
+        return new CommentResponse(newComment.getId(), post_id, newComment.getUser().getId(), newComment.getContent());
     }
 
     @Override
-    public Comment updateComment(Long post_id, Long comment_id, UpdateCommentRequest req){
-        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
+    public CommentResponse updateComment(Long post_id, Long comment_id, UpdateCommentRequest req){
+        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(databaseUserRepository.findUserById(req.getAuthor_id()).isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
+        Optional<User> findUser = databaseUserRepository.findUserById(req.getUser_id());
+
+        if(findUser.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
         Optional<Comment> find = databaseCommentRepository.findCommentByCommentId(comment_id);
@@ -67,8 +83,8 @@ public class CommentServiceImpl implements CommentService {
         }
 
         Comment update = find.get();
-        update.setContent(req.getContent());
-        update.setRewriteDate(LocalDateTime.now());
+        update.changeContent(req.getContent());
+        update.setUpdatedAt(LocalDateTime.now());
 
         Optional<Comment> updateComment = databaseCommentRepository.update(update);
 
@@ -76,14 +92,18 @@ public class CommentServiceImpl implements CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return updateComment.get();
+        Comment comment = updateComment.get();
+
+        return new CommentResponse(comment.getId(), findPost.get().getId(), req.getUser_id(), req.getContent());
     }
 
     @Override
-    public Comment deleteComment(Long post_id, Long comment_id, Long user_id){
+    public CommentResponse deleteComment(Long post_id, Long comment_id, Long user_id){
         if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
+
+        Post findPost = databasePostRepository.findPostByPostId(post_id).get();
 
         Optional<Comment> find = databaseCommentRepository.findCommentByCommentId(comment_id);
 
@@ -91,11 +111,18 @@ public class CommentServiceImpl implements CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(!find.get().getAuthor_id().equals(user_id)){
+        if(!find.get().getUser().getId().equals(user_id)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        return databaseCommentRepository.deleteComment(find.get());
+        Optional<Comment> deleteComment = databaseCommentRepository.deleteComment(find.get());
+
+        if(deleteComment.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        Comment comment = deleteComment.get();
+        return new CommentResponse(comment.getId(), findPost.getId(), comment.getUser().getId(), comment.getContent());
     }
 
 }

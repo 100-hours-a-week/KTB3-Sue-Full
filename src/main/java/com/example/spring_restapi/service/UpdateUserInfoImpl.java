@@ -1,52 +1,53 @@
 package com.example.spring_restapi.service;
 
-import com.example.spring_restapi.dto.request.UpdateUserRequest;
+import com.example.spring_restapi.dto.request.UpdateUserInfoRequest;
+import com.example.spring_restapi.dto.response.UserInfoResponse;
+import com.example.spring_restapi.dto.response.UserResponse;
 import com.example.spring_restapi.model.User;
+import com.example.spring_restapi.model.UserProfile;
+import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
 @Qualifier("updateUserInfo")
-public class UpdateUserInfoImpl implements UpdateUserService<User, UpdateUserRequest>{
+public class UpdateUserInfoImpl implements UpdateUserService<UserInfoResponse, UpdateUserInfoRequest> {
     private final UserRepository databaseUserRepository;
 
-    public UpdateUserInfoImpl(UserRepository databaseUserRepository){
+    public UpdateUserInfoImpl(UserRepository databaseUserRepository) {
         this.databaseUserRepository = databaseUserRepository;
     }
 
     @Override
-    public User update(Long id, UpdateUserRequest req) {
-        Optional<User> findUser = databaseUserRepository.findUserById(id);
+    @Transactional
+    public UserInfoResponse update(Long user_id, UpdateUserInfoRequest req) {
+        Optional<User> findUser = databaseUserRepository.findUserById(user_id);
 
         if(findUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(!findUser.get().getPassword().equals(req.getCurrentPassword())){
+        User updateUser = findUser.get();
+
+        if(!updateUser.getPassword().equals(req.getCurrentPassword())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        User data = findUser.get();
+        updateUser.changeEmail(req.getEmail());
+        updateUser.changePassword(req.getNewPassword(), req.getNewPasswordConfirm());
+        updateUser.changeUserRole(req.getUserRole());
+        updateUser.setUpdatedAt(LocalDateTime.now());
 
-        if(!req.getNewPassword().isEmpty()){
-            data.setPassword(req.getNewPassword());
-        }
+        databaseUserRepository.update(updateUser);
 
-        data.setNickname(req.getNickname());
-        data.setProfileImage(req.getProfile_image());
-        data.setIntroduce(req.getIntroduce());
-
-        Optional<User> updateUser = databaseUserRepository.update(data);
-        if(updateUser.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
-
-        return updateUser.get();
+        return new UserInfoResponse(
+                updateUser.getId(), updateUser.getEmail(), updateUser.getUserRole());
     }
 }

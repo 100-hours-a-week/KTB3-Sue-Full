@@ -2,24 +2,23 @@ package com.example.spring_restapi.service;
 
 import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
+import com.example.spring_restapi.dto.response.PostResponse;
 import com.example.spring_restapi.model.Post;
 
 import java.util.List;
 
 public interface PostService {
 
-    Post write(CreatePostRequest req);
+    PostResponse write(CreatePostRequest req);
 
-    Post getPostByPostId(Long post_id);
+    PostResponse getPostByPostId(Long post_id);
 
-    List<Post> getPostByAuthorId(Long authorId);
+    List<PostResponse> getPostByAuthorId(Long authorId);
 
-    List<Post> findAllPosts();
+    List<PostResponse> getPostsOfPage(int page, int size);
 
-    List<Post> getPostsOfPage(int page, int size);
+    PostResponse updatePost(Long post_id, UpdatePostRequest req);
 
-    Post updatePost(Long post_id, UpdatePostRequest req);
-
-    Post deletePost(Long post_id, Long user_id);
+    PostResponse deletePost(Long post_id, Long user_id);
 
 }

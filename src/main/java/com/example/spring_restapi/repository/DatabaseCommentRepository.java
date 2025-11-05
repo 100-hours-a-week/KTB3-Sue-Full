@@ -1,65 +1,75 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.Comment;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class DatabaseCommentRepository implements CommentRepository{
-    private final ConcurrentHashMap<Long, Comment> commentMap = new ConcurrentHashMap<>();
-    private long sequence;
 
-    public DatabaseCommentRepository(){
-        sequence = 0;
+    @PersistenceContext
+    EntityManager em;
 
-        Comment comment1 = new Comment(null, 1L, 2L, "Cool~~", LocalDateTime.parse("2025-10-16T10:00:00"));
-        Comment comment2 = new Comment(null, 2L, 3L, "OTL...", LocalDateTime.parse("2025-10-16T14:00:00"));
-        Comment comment3 = new Comment(null, 2L, 1L, "OMG", LocalDateTime.parse("2025-10-17T10:00:00"));
-        Comment comment4 = new Comment(null, 3L, 1L, "Damn!", LocalDateTime.parse("2025-10-19T10:00:00"));
+    public DatabaseCommentRepository(){}
 
-        save(comment1);
-        save(comment2);
-        save(comment3);
-        save(comment4);
+    @Override
+    @Transactional
+    public void save(Comment comment){
+        em.persist(comment);
     }
 
     @Override
-    public Comment save(Comment comment){
-        sequence++;
-        if(Optional.ofNullable(comment.getComment_id()).isEmpty()){
-            comment.setComment_id(sequence);
-        }
-        commentMap.put(comment.getComment_id(), comment);
-        return commentMap.get(comment.getComment_id());
-    }
-
-    @Override
+    @Transactional
     public Optional<Comment> update(Comment comment){
-        return Optional.ofNullable(commentMap.put(comment.getComment_id(), comment));
+        Comment updateComment = em.find(Comment.class, comment.getId());
+        updateComment.changeContent(comment.getContent());
+        updateComment.setUpdatedAt(LocalDateTime.now());
+
+        return Optional.of(updateComment);
     }
 
     @Override
-    public Comment deleteComment(Comment comment){
-        return commentMap.remove(comment.getComment_id());
+    @Transactional
+    public Optional<Comment> deleteComment(Comment comment){
+        Comment deleteComment = em.find(Comment.class, comment.getId());
+        deleteComment.setDeletedAt(LocalDateTime.now());
+        return Optional.of(deleteComment);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Comment> findCommentByCommentId(Long comment_id){
-        return Optional.ofNullable(commentMap.get(comment_id));
+        TypedQuery<Comment> query = em.createQuery("""
+                select c
+                from Comment c
+                where c.id = :id
+                and c.deletedAt IS NULL
+                """, Comment.class);
+
+        query.setParameter("id", comment_id);
+
+        return Optional.ofNullable(query.getSingleResult());
     }
 
     @Override
-    public List<Comment> findCommentByPosId(Long post_id){
-        List<Comment> findComment = new ArrayList<>();
-        for(Map.Entry<Long, Comment> entry : commentMap.entrySet()){
-            Comment find = entry.getValue();
-            if(find.getPost_id().equals(post_id)){
-                findComment.add(find);
-            }
-        }
-        return findComment;
+    @Transactional(readOnly = true)
+    public List<Comment> findCommentsByPosId(Long post_id){
+        TypedQuery<Comment> query = em.createQuery("""
+                select c
+                from Comment c
+                where c.post.id = :id
+                and c.deletedAt IS NULL
+                order by c.createdAt
+                """, Comment.class);
+
+        query.setParameter("id", post_id);
+
+        return query.getResultList();
     }
 }

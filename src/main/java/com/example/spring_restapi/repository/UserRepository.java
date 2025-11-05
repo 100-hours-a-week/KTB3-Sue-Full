@@ -1,13 +1,14 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.User;
+import com.example.spring_restapi.model.UserRole;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
 
-    User save(User user);
+    void save(User user);
 
     List<User> findAllUser();
 
@@ -15,7 +16,13 @@ public interface UserRepository {
 
     Optional<User> findUserByEmail(String email);
 
-    Optional<User> update(User user);
+    void update(User user);
 
-    User deleteUserById(Long user_id);
+    void updateEmail(Long user_id, String email);
+
+    void updatePassword(Long user_id, String password, String passwordConfirm);
+
+    void updateUserRole(Long user_id, UserRole userRole);
+
+    void deleteUserById(Long user_id);
 }

@@ -1,10 +1,10 @@
 package com.example.spring_restapi.controller;
 
-import com.example.spring_restapi.model.Post;
 import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.DeletePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
 import com.example.spring_restapi.dto.response.CommonResponse;
+import com.example.spring_restapi.dto.response.PostResponse;
 import com.example.spring_restapi.dto.response.ReadPostByPageResponse;
 import com.example.spring_restapi.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/posts")
@@ -34,9 +33,8 @@ public class PostController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ){
-        List<Post> posts = postServiceImpl.getPostsOfPage(page,size);
 
-        ReadPostByPageResponse data = new ReadPostByPageResponse(posts);
+        ReadPostByPageResponse data = new ReadPostByPageResponse(postServiceImpl.getPostsOfPage(page,size));
         CommonResponse<ReadPostByPageResponse> res = CommonResponse.success("read_posts_success", data);
         return ResponseEntity.ok(res);
         //request, response DTO 만들
@@ -48,10 +46,10 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
     })
     @GetMapping("/{post_id}")
-    public ResponseEntity<CommonResponse<Post>> readPostsById(@PathVariable Long post_id){
-        Post data = postServiceImpl.getPostByPostId(post_id);
+    public ResponseEntity<CommonResponse<PostResponse>> readPostsById(@PathVariable Long post_id){
+        PostResponse data = postServiceImpl.getPostByPostId(post_id);
 
-        CommonResponse<Post> res = CommonResponse.success("read_post_success", data);
+        CommonResponse<PostResponse> res = CommonResponse.success("read_post_success", data);
         return ResponseEntity.ok(res);
     }
 
@@ -60,10 +58,10 @@ public class PostController {
             @ApiResponse(responseCode = "201", description = "게시물 작성 성공")
     })
     @PostMapping
-    public ResponseEntity<CommonResponse<Post>> writePost(@RequestBody CreatePostRequest req){
-        Post data = postServiceImpl.write(req);
+    public ResponseEntity<CommonResponse<PostResponse>> writePost(@RequestBody CreatePostRequest req){
+        PostResponse data = postServiceImpl.write(req);
 
-        CommonResponse<Post> res = CommonResponse.success("write_post_success", data);
+        CommonResponse<PostResponse> res = CommonResponse.success("write_post_success", data);
         return ResponseEntity.status(201).body(res);
     }
 
@@ -74,10 +72,10 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물을 수정하려 함")
     })
     @PatchMapping("/{post_id}")
-    public ResponseEntity<CommonResponse<Post>> updatePost(@PathVariable Long post_id, @RequestBody UpdatePostRequest req){
-        Post data = postServiceImpl.updatePost(post_id, req);
+    public ResponseEntity<CommonResponse<PostResponse>> updatePost(@PathVariable Long post_id, @RequestBody UpdatePostRequest req){
+        PostResponse data = postServiceImpl.updatePost(post_id, req);
 
-        CommonResponse<Post> res = CommonResponse.success("update_post_success", data);
+        CommonResponse<PostResponse> res = CommonResponse.success("update_post_success", data);
 
         return ResponseEntity.status(201).body(res);
     }
@@ -89,10 +87,10 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물을 삭제하려 함")
     })
     @DeleteMapping("/{post_id}")
-    public ResponseEntity<CommonResponse<Long>> deletePost(@PathVariable Long post_id, @RequestBody DeletePostRequest req){
-        Post data = postServiceImpl.deletePost(post_id, req.getUser_id());
+    public ResponseEntity<CommonResponse<PostResponse>> deletePost(@PathVariable Long post_id, @RequestParam Long user_id){
+        PostResponse data = postServiceImpl.deletePost(post_id, user_id);
 
-        CommonResponse<Long> res = CommonResponse.success("delete_post_success", data.getPost_id());
+        CommonResponse<PostResponse> res = CommonResponse.success("delete_post_success", data);
 
         return ResponseEntity.ok(res);
     }
