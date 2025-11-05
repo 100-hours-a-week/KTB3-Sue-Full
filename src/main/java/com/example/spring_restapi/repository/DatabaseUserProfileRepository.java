@@ -34,6 +34,7 @@ public class DatabaseUserProfileRepository implements UserProfileRepository {
         TypedQuery<UserProfile> query = em.createQuery("""
                 select p
                 from UserProfile p
+                where p.deletedAt IS NULL
                 """, UserProfile.class);
 
         return query.getResultList();
@@ -46,6 +47,7 @@ public class DatabaseUserProfileRepository implements UserProfileRepository {
                 select p
                 from UserProfile p
                 where p.user.id = :user_id
+                and p.deletedAt IS NULL
                 """, UserProfile.class)
                 .setParameter("user_id", user_id)
                 .getResultList();
@@ -60,6 +62,7 @@ public class DatabaseUserProfileRepository implements UserProfileRepository {
                 select p
                 from UserProfile p
                 where p.nickname = :nickname
+                and p.deletedAt IS NULL
                 """, UserProfile.class);
         query.setParameter("nickname", nickname);
 

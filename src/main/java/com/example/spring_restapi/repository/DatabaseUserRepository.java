@@ -30,7 +30,7 @@ public class DatabaseUserRepository implements UserRepository{
     @Transactional(readOnly = true)
     public List<User> findAllUser(){
         TypedQuery<User> query = em.createQuery(
-                "select u from User u",
+                "select u from User u where u.deletedAt IS NULL",
                 User.class);
 
         return query.getResultList();
@@ -43,6 +43,7 @@ public class DatabaseUserRepository implements UserRepository{
                 select u
                 from User u
                 where u.id = :user_id
+                and u.deletedAt IS NULL
                 """, User.class)
                 .setParameter("user_id", user_id)
                 .getResultList();
@@ -54,7 +55,7 @@ public class DatabaseUserRepository implements UserRepository{
     @Transactional(readOnly = true)
     public Optional<User> findUserByEmail(String email){
         TypedQuery<User> query = em.createQuery(
-                "select u from User u where u.email = :email", User.class
+                "select u from User u where u.email = :email and u.deletedAt IS NULL" , User.class
         );
 
         query.setParameter("email", email);
@@ -69,23 +70,6 @@ public class DatabaseUserRepository implements UserRepository{
         updateUser.changePassword(user.getPassword(), user.getPasswordConfirm());
         updateUser.changeUserRole(user.getUserRole());
         updateUser.setUpdatedAt(LocalDateTime.now());
-//        Query query = em.createQuery("""
-//                update User u
-//                set u.email = :email,
-//                    u.password = :password,
-//                    u.userRole = :userRole,
-//                    u.updatedAt = :updatedAt
-//                where u.id = :user_id
-//                """)
-//                .setParameter("email", user.getEmail())
-//                .setParameter("password", user.getPassword())
-//                .setParameter("userRole", user.getUserRole())
-//                .setParameter("updatedAt", LocalDateTime.now())
-//                .setParameter("user_id", user.getId());
-//
-//        int result = query.executeUpdate();
-//        System.out.println("수정된 row 수 = " + result);
-//        em.clear();
     }
 
 
