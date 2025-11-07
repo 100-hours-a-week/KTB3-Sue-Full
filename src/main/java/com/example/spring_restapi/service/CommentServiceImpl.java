@@ -12,6 +12,7 @@ import com.example.spring_restapi.repository.CommentRepository;
 import com.example.spring_restapi.repository.PostRepository;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,18 +22,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository databaseCommentRepository;
     private final PostRepository databasePostRepository;
     private final UserRepository databaseUserRepository;
     private final UserProfileRepository databaseUserProfileRepository;
-
-    public CommentServiceImpl(CommentRepository databaseCommentRepository, UserProfileRepository databaseUserProfileRepository, PostRepository databasePostRepository, UserRepository databaseUserRepository){
-        this.databaseCommentRepository = databaseCommentRepository;
-        this.databasePostRepository = databasePostRepository;
-        this.databaseUserRepository = databaseUserRepository;
-        this.databaseUserProfileRepository = databaseUserProfileRepository;
-    }
 
     @Override
     public CommentListResponse getCommentsByPostId(Long post_id){

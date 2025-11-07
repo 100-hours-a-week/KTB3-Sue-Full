@@ -4,6 +4,7 @@ import com.example.spring_restapi.dto.request.UpdateUserIntroduceRequest;
 import com.example.spring_restapi.dto.response.UserProfileResponse;
 import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.UserProfileRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,14 +13,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Qualifier("updateUserIntroduce")
 public class UpdateUserIntroduceImpl implements UpdateUserService<UserProfileResponse, UpdateUserIntroduceRequest> {
     private final UserProfileRepository databaseUserProfileRepository;
-
-
-    public UpdateUserIntroduceImpl(UserProfileRepository databaseUserRepository) {
-        this.databaseUserProfileRepository = databaseUserRepository;
-    }
 
     @Override
     public UserProfileResponse update(Long user_id, UpdateUserIntroduceRequest req){

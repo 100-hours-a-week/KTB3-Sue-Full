@@ -7,6 +7,7 @@ import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,13 +18,10 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Qualifier("updateUserInfo")
 public class UpdateUserInfoImpl implements UpdateUserService<UserInfoResponse, UpdateUserInfoRequest> {
     private final UserRepository databaseUserRepository;
-
-    public UpdateUserInfoImpl(UserRepository databaseUserRepository) {
-        this.databaseUserRepository = databaseUserRepository;
-    }
 
     @Override
     @Transactional

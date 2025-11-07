@@ -4,6 +4,7 @@ import com.example.spring_restapi.dto.request.UpdatePasswordRequest;
 import com.example.spring_restapi.dto.response.UserInfoResponse;
 import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,13 +14,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Qualifier("updateUserPassword")
 public class UpdateUserPasswordImpl implements UpdateUserService<UserInfoResponse, UpdatePasswordRequest>{
     private final UserRepository databaseUserRepository;
-
-    public UpdateUserPasswordImpl(UserRepository databaseUserRepository){
-        this.databaseUserRepository = databaseUserRepository;
-    }
 
     @Override
     @Transactional

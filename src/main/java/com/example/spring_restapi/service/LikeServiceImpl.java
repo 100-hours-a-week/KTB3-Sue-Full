@@ -12,6 +12,7 @@ import com.example.spring_restapi.repository.LikeRepository;
 import com.example.spring_restapi.repository.PostRepository;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,18 +23,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class LikeServiceImpl implements LikeService{
     private final LikeRepository databaseLikeRepository;
     private final UserRepository databaseUserRepository;
     private final UserProfileRepository databaseUserProfileRepository;
     private final PostRepository databasePostRepository;
-
-    public LikeServiceImpl(LikeRepository databaseLikeRepository, UserRepository databaseUserRepository, UserProfileRepository databaseUserProfileRepository, PostRepository databasePostRepository){
-        this.databaseLikeRepository = databaseLikeRepository;
-        this.databaseUserRepository = databaseUserRepository;
-        this.databaseUserProfileRepository = databaseUserProfileRepository;
-        this.databasePostRepository = databasePostRepository;
-    }
 
     @Override
     @Transactional

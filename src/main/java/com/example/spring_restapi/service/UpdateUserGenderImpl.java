@@ -4,6 +4,7 @@ import com.example.spring_restapi.dto.request.UpdateUserGenderRequest;
 import com.example.spring_restapi.dto.response.UserProfileResponse;
 import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.UserProfileRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,13 +14,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Qualifier("updateUserGender")
 public class UpdateUserGenderImpl implements UpdateUserService<UserProfileResponse, UpdateUserGenderRequest> {
     private final UserProfileRepository databaseUserProfileRepository;
-
-    public UpdateUserGenderImpl(UserProfileRepository databaseUserProfileRepository){
-        this.databaseUserProfileRepository = databaseUserProfileRepository;
-    }
 
     @Override
     @Transactional

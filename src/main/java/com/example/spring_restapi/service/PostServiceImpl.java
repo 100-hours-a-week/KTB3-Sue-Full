@@ -6,6 +6,7 @@ import com.example.spring_restapi.model.*;
 import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
 import com.example.spring_restapi.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
     private final PostRepository databasePostRepository;
     private final PostImagesRepository databasePostImageRepository;
@@ -24,15 +26,6 @@ public class PostServiceImpl implements PostService {
     private final UserProfileRepository databaseUserProfileRepository;
     private final LikeRepository databaseLikeRepository;
     private final CommentRepository databaseCommentRepository;
-
-    public PostServiceImpl(PostRepository databasePostRepository, PostImagesRepository databasePostImageRepository, UserRepository databaseUserRepository, UserProfileRepository databaseUserProfileRepository, LikeRepository databaseLikeRepository, CommentRepository databaseCommentRepository) {
-        this.databasePostRepository = databasePostRepository;
-        this.databasePostImageRepository = databasePostImageRepository;
-        this.databaseUserRepository = databaseUserRepository;
-        this.databaseUserProfileRepository = databaseUserProfileRepository;
-        this.databaseLikeRepository = databaseLikeRepository;
-        this.databaseCommentRepository = databaseCommentRepository;
-    }
 
     @Override
     public PostResponse write(CreatePostRequest req) {

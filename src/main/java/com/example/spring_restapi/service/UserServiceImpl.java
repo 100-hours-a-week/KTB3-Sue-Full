@@ -8,6 +8,7 @@ import com.example.spring_restapi.dto.request.*;
 import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository databaseUserRepository;
     private final UserProfileRepository databaseUserProfileRepository;
@@ -29,30 +31,6 @@ public class UserServiceImpl implements UserService {
     private final UpdateUserService<UserProfileResponse, UpdateUserIntroduceRequest> updateUserIntroduce;
     private final UpdateUserService<UserProfileResponse, UpdateUserGenderRequest> updateUserGender;
     private final UpdateUserService<UserProfileResponse, UpdateUserProfileIsPrivateRequest> updateUserProfileIsPrivate;
-
-    public UserServiceImpl(
-            UserRepository databaseUserRepository,
-            UserProfileRepository databaseUserProfileRepository,
-            @Qualifier("updateUserInfo") UpdateUserService<UserInfoResponse, UpdateUserInfoRequest> updateUserInfo,
-            @Qualifier("updateUserPassword") UpdateUserService<UserInfoResponse, UpdatePasswordRequest> updateUserPassword,
-            @Qualifier("updateUserNickname") UpdateUserService<UserProfileResponse, UpdateUserNicknameRequest> updateUserNickname,
-            @Qualifier("updateUserProfileImage") UpdateUserService<UserProfileResponse, UpdateUserProfileImageRequest> updateUserProfileImage,
-            @Qualifier("updateUserIntroduce") UpdateUserService<UserProfileResponse, UpdateUserIntroduceRequest> updateUserIntroduce,
-            @Qualifier("updateUserGender") UpdateUserService<UserProfileResponse, UpdateUserGenderRequest> updateUserGender,
-            @Qualifier("updateUserProfileIsPrivate") UpdateUserService<UserProfileResponse, UpdateUserProfileIsPrivateRequest> updateUserProfileIsPrivate
-    ){
-        this.databaseUserRepository = databaseUserRepository;
-        this.databaseUserProfileRepository = databaseUserProfileRepository;
-
-        this.updateUserInfo = updateUserInfo;
-
-        this.updateUserPassword = updateUserPassword;
-        this.updateUserNickname = updateUserNickname;
-        this.updateUserProfileImage = updateUserProfileImage;
-        this.updateUserIntroduce = updateUserIntroduce;
-        this.updateUserGender = updateUserGender;
-        this.updateUserProfileIsPrivate = updateUserProfileIsPrivate;
-    }
 
     @Override
     @Transactional
