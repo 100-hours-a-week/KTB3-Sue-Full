@@ -80,7 +80,7 @@ public class LikeController {
     ){
         LikeListResponse like = likeServiceImpl.getLikes(post_id);
 
-        CommonResponse<LikeListResponse> res = CommonResponse.success("unlike_success", like);
+        CommonResponse<LikeListResponse> res = CommonResponse.success("read_like_list_success", like);
         return ResponseEntity.ok(res);
     }
 }
