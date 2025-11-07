@@ -1,6 +1,7 @@
 package com.example.spring_restapi.controller;
 
 import com.example.spring_restapi.dto.request.CreatePostRequest;
+import com.example.spring_restapi.dto.request.DeletePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
 import com.example.spring_restapi.dto.response.CommonResponse;
 import com.example.spring_restapi.dto.response.PostResponse;
@@ -87,8 +88,8 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물을 삭제하려 함")
     })
     @DeleteMapping("/{post_id}")
-    public ResponseEntity<CommonResponse<PostResponse>> deletePost(@PathVariable Long post_id, @RequestParam Long user_id){
-        PostResponse data = postServiceImpl.deletePost(post_id, user_id);
+    public ResponseEntity<CommonResponse<PostResponse>> deletePost(@PathVariable Long post_id, @RequestBody DeletePostRequest req){
+        PostResponse data = postServiceImpl.deletePost(post_id, req.getUser_id());
 
         CommonResponse<PostResponse> res = CommonResponse.success("delete_post_success", data);
 

@@ -233,7 +233,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserProfileResponse> searchAsList(String keyword) {
         List<UserProfile> list = databaseUserProfileRepository.findByNicknameContainingIgnoreCase(keyword);
-        return list.stream().map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate())).toList();
+
+        return list.stream().filter(profile -> profile.getDeletedAt() == null).map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate())).toList();
     }
 
     // Page
@@ -242,6 +243,7 @@ public class UserServiceImpl implements UserService {
         Sort sort = Sort.by("desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<UserProfile> profiles = databaseUserProfileRepository.findByNicknameContainingIgnoreCase(keyword, pageable);
+
 
         return profiles.map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate()));
     }
@@ -252,6 +254,7 @@ public class UserServiceImpl implements UserService {
         Sort sort = Sort.by("desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Slice<UserProfile> profiles = databaseUserProfileRepository.findSliceByNicknameContainingIgnoreCase(keyword, pageable);
+
         return profiles.map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate()));
     }
 
