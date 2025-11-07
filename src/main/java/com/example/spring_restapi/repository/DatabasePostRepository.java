@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class DatabasePostRepository implements PostRepository {
@@ -41,14 +40,15 @@ public class DatabasePostRepository implements PostRepository {
     @Override
     @Transactional(readOnly = true)
     public List<Post> findPostsOfPage(int page, int size){
-        // 페이징 넣기
-
         TypedQuery<Post> query = em.createQuery("""
                 select p
                 from Post p
+                join fetch p.author
                 where p.deletedAt IS NULL
                 order by p.createdAt
-                """, Post.class);
+                """, Post.class)
+                .setFirstResult((page - 1) * size)
+                .setMaxResults(size);
 
         return query.getResultList();
     }
@@ -59,6 +59,7 @@ public class DatabasePostRepository implements PostRepository {
         TypedQuery<Post> query = em.createQuery("""
                 select p
                 from Post p
+                join fetch p.author
                 where p.id = :id
                 AND p.deletedAt IS NULL
                 """, Post.class);
@@ -73,8 +74,9 @@ public class DatabasePostRepository implements PostRepository {
         TypedQuery<Post> query = em.createQuery("""
                 select p
                 from Post p
-                where p.user.id = :id
-                AND p.deletedAt IS NULL
+                join fetch p.author
+                where p.author.id = :id
+                and p.deletedAt IS NULL
                 """, Post.class);
         query.setParameter("id", author_id);
 

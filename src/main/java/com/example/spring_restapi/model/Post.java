@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,6 +38,11 @@ public class Post {
     @Schema(description = "게시글 내용", example = "오늘은 Swagger에 대해 배웠다...")
     @Column(name = "content", length = 1000)
     private String content;
+
+    @Schema(description = "게시글 이미지", example = "[image1.jpg, image2.jpg, ...]")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    private List<PostImages> images = new ArrayList<>();
 
     @Schema(description = "게시글 카테고리", example = "NOTICE/FREE")
     @Enumerated(EnumType.STRING)
@@ -96,6 +102,16 @@ public class Post {
     public void changeContent(String content){
         if (content == null || content.isBlank()) throw new IllegalArgumentException("new content is required");
         this.content = content;
+    }
+
+    public void addImages(PostImages image){
+        images.add(image);
+        image.setPost(this);
+    }
+
+    public void deleteImages(PostImages image){
+        images.remove(image);
+        image.setPost(null);
     }
 
     public void increaseWatch(){

@@ -54,8 +54,6 @@ public class PostServiceImpl implements PostService {
         UserProfile profile = findProfile.get();
         Post newPost = new Post(req.getTitle(), req.getContent(), req.getPostType(), user);
 
-
-        databasePostRepository.save(newPost);
         // 로그인된 유저인지 토큰 확인 로직 추가 예정
 
         if (!req.getImages().isEmpty()) {
@@ -63,12 +61,14 @@ public class PostServiceImpl implements PostService {
             images.getFirst().changeIsThumbNail();
 
             for (PostImages image : images) {
-                databasePostImageRepository.save(image);
+                newPost.addImages(image);
             }
         }
 
-        List<PostImageResponse> postImages = databasePostImageRepository
-                .findPostImagesByPostId(newPost.getId())
+        databasePostRepository.save(newPost);
+
+        List<PostImageResponse> postImages = newPost
+                .getImages()
                 .stream()
                 .map(image -> new PostImageResponse(newPost.getId(), image.getImage_url(), image.getIsThumbnail()))
                 .collect(Collectors.toList());
@@ -96,9 +96,11 @@ public class PostServiceImpl implements PostService {
         }
 
         Post post = findPost.get();
+        User author = post.getAuthor();
+
         databasePostRepository.readPostBySomeone(post);
 
-        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId());
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(author.getId());
 
         if (findProfile.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -138,7 +140,7 @@ public class PostServiceImpl implements PostService {
         UserProfile profile = authorProfile.get();
 
         return posts.stream().map(post -> {
-                    List<PostImageResponse> images = databasePostImageRepository.findPostImagesByPostId(post.getId()).stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).collect(Collectors.toList());
+            List<PostImageResponse> images = post.getImages().stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
 
                     return new PostResponse(
                             post.getId(),
@@ -170,7 +172,7 @@ public class PostServiceImpl implements PostService {
         return findPost.stream().map(post -> {
             UserProfile profile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
 
-            List<PostImageResponse> images = databasePostImageRepository.findPostImagesByPostId(post.getId()).stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).collect(Collectors.toList());
+            List<PostImageResponse> images = post.getImages().stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
 
             return new PostResponse(
                     post.getId(),
@@ -226,16 +228,15 @@ public class PostServiceImpl implements PostService {
 
         if (!req.getImages().isEmpty()) {
             databasePostImageRepository.deleteAllPostImagesByPostId(data.getId());
-
             List<PostImages> images = req.getImages().stream().map(image -> PostImages.create(data, image, false)).toList();
             images.getFirst().changeIsThumbNail();
 
             for (PostImages image : images) {
-                databasePostImageRepository.save(image);
+                data.addImages(image);
             }
         }
 
-        List<PostImageResponse> images = databasePostImageRepository.findPostImagesByPostId(data.getId()).stream().map(image -> new PostImageResponse(data.getId(), image.getImage_url(),image.getIsThumbnail())).collect(Collectors.toList());
+        List<PostImageResponse> images = data.getImages().stream().map(image -> new PostImageResponse(data.getId(), image.getImage_url(),image.getIsThumbnail())).collect(Collectors.toList());
 
         return new PostResponse(data.getId(), profile.getNickname(), profile.getProfileImage(), data.getTitle(), data.getContent(), images, data.getPostType(), data.getWatch(), data.getLikeCount(), data.getCommentCount(), data.getCreatedAt(), data.getUpdatedAt());
     }
