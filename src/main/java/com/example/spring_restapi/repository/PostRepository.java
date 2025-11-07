@@ -23,6 +23,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             """)
     List<Post> findPostsOfPage(int page, int size);
 
+    @Query("""
+            select p
+            from Post p
+            join fetch p.author
+            where p.id = :post_id
+                and p.deletedAt IS NULL
+            """)
     Optional<Post> findPostById(Long post_id);
 
     @Query("""
@@ -85,6 +92,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             """)
     void deleteCommentBySomeone(Post post);
 
+    @Modifying
+    @Query("""
+            update Post p
+            set p.deletedAt = CURRENT_TIMESTAMP
+            where p.id = :id
+            """)
     void deletePostById(Long post_id);
 
 }

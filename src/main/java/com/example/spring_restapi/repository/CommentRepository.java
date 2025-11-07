@@ -23,15 +23,31 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Modifying
     @Query("""
-            delete
-            from Comment c
+            update Comment c
+            set c.deletedAt = CURRENT_TIMESTAMP
             where c.id = :id
             """)
     void deleteComment(Long id);
 
+    @Modifying
+    @Query("""
+            update Comment c
+            set c.deletedAt = CURRENT_TIMESTAMP
+            where c.post.id = :post_id
+            """)
     void deleteCommentByPostId(Long post_id);
 
+    @Query("""
+            select c
+            from Comment c
+            where c.id = :comment_id
+            """)
     Optional<Comment> findCommentById(Long comment_id);
 
+    @Query("""
+            select c
+            from Comment c
+            where c.post.id = :post_id
+            """)
     List<Comment> findCommentsByPostId(Long post_id);
 }

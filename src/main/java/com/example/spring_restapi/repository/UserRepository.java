@@ -12,8 +12,20 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @Query("""
+            select u
+            from User u
+            where u.id = :user_id
+            and u.deletedAt IS NULL
+            """)
     Optional<User> findUserById(Long user_id);
 
+    @Query("""
+            select u
+            from User u
+            where u.email = :email
+            and u.deletedAt IS NULL
+            """)
     Optional<User> findUserByEmail(String email);
 
     @Modifying
@@ -21,16 +33,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
             update User u
             set u.email = :email,
                 u.password = :password,
-                u.userRole = :userRole,
-                u.updatedAt = CURRENT_TIMESTAMP
+                u.userRole = :userRole
             """)
     void update(String email, String password, UserRole userRole);
 
     @Modifying
     @Query("""
             update User u
-            set u.email = :email,
-                u.updatedAt = CURRENT_TIMESTAMP
+            set u.email = :email
             where u.id = :user_id
             """)
     void updateEmail(Long user_id, String email);
@@ -38,8 +48,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("""
             update User u
-            set u.password = :password,
-                u.updatedAt = CURRENT_TIMESTAMP
+            set u.password = :password
             where u.id = :user_id
             """)
     void updatePassword(Long user_id, String password);
@@ -47,11 +56,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("""
             update User u
-            set u.userRole = :userRole,
-                u.updatedAt = CURRENT_TIMESTAMP
+            set u.userRole = :userRole
             where u.id = :user_id
             """)
     void updateUserRole(Long user_id, UserRole userRole);
 
+    @Modifying
+    @Query("""
+            update User u
+            set u.deletedAt = CURRENT_TIMESTAMP
+            where u.id = :user_id
+            """)
     void deleteUserById(Long user_id);
 }

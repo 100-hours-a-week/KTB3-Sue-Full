@@ -12,8 +12,20 @@ import java.util.Optional;
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Long> {
 
+    @Query("""
+            select l
+            from Like l
+            where l.post.id = :post_id
+                and l.deletedAt IS NULL
+            """)
     List<Like> findLikesByPostId(Long post_id);
 
+    @Query("""
+            select l
+            from Like l
+            where l.user.id = :user_id
+                and l.deletedAt IS NULL
+            """)
     List<Like> findLikesByUserId(Long user_id);
 
     @Query("""
