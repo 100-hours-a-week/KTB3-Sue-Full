@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
         allocationSize = 50
 )
 @Table(name = "post_images")
-public class PostImages {
+public class PostImages extends AbstractAuditable {
 
     @Schema(description = "게시글 이미지 아이디", example = "1L")
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_images_seq")
@@ -38,12 +40,12 @@ public class PostImages {
 
 
     @Schema(description = "게시글 이미지 생성일자", example = "20251020T10:00:00")
-    @Setter
-    @Column(name = "createdAt", nullable = false)
+    @CreatedDate
+    @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Schema(description = "게시글 이미지 수정일자", example = "20251020T10:00:00")
-    @Setter
+    @LastModifiedDate
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 

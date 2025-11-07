@@ -20,6 +20,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository databaseUserRepository;
     private final UserProfileRepository databaseUserProfileRepository;
@@ -33,7 +34,6 @@ public class UserServiceImpl implements UserService {
     private final UpdateUserService<UserProfileResponse, UpdateUserProfileIsPrivateRequest> updateUserProfileIsPrivate;
 
     @Override
-    @Transactional
     public UserResponse login(LoginRequest req){
         if(req.getEmail().isEmpty() || req.getPassword().isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
@@ -88,20 +88,20 @@ public class UserServiceImpl implements UserService {
 
         UserProfile newUserProfile = UserProfile.create(req.getNickname(), req.getProfileImage(), req.getIntroduce(), req.getGender());
 
-        databaseUserRepository.save(newUser);
+        User user = databaseUserRepository.save(newUser);
 
-        newUserProfile.setUser(newUser);
-        databaseUserProfileRepository.save(newUserProfile);
+        newUserProfile.setUser(user);
+        UserProfile profile = databaseUserProfileRepository.save(newUserProfile);
 
         return new UserResponse(
-                newUser.getId(),
-                newUser.getEmail(),
-                newUser.getUserRole(),
-                newUserProfile.getNickname(),
-                newUserProfile.getProfileImage(),
-                newUserProfile.getIntroduce(),
-                newUserProfile.getGender(),
-                newUserProfile.getIsPrivate());
+                user.getId(),
+                user.getEmail(),
+                user.getUserRole(),
+                profile.getNickname(),
+                profile.getProfileImage(),
+                profile.getIntroduce(),
+                profile.getGender(),
+                profile.getIsPrivate());
     }
 
     @Override
@@ -183,6 +183,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserProfileResponse updateUserProfileImage(Long user_id, UpdateUserProfileImageRequest req) {
         return updateUserProfileImage.update(user_id, req);
     }

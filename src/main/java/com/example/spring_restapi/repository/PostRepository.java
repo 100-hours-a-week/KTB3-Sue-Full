@@ -1,34 +1,90 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.Post;
+import com.example.spring_restapi.model.PostImages;
+import com.example.spring_restapi.model.PostType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface PostRepository {
+@Repository
+public interface PostRepository extends JpaRepository<Post, Long> {
 
-    void save(Post post);
-
-    List<Post> findAllPost();
-
+    @Query("""
+            select p
+            from Post p
+            join fetch p.author
+            where p.deletedAt IS NULL
+            order by p.createdAt
+            """)
     List<Post> findPostsOfPage(int page, int size);
 
-    Optional<Post> findPostByPostId(Long post_id);
+    Optional<Post> findPostById(Long post_id);
 
-    List<Post> findPostByPostAuthorId(Long author_id);
+    @Query("""
+            select p
+            from Post p
+            join fetch p.author
+            where p.author.id = :author_id
+            and p.deletedAt IS NULL
+            """)
+    List<Post> findPostByPostAuthor_Id(Long author_id);
 
-    void update(Post post);
+    @Modifying
+    @Query("""
+            update Post p
+            set p.title = :title,
+                p.content= :content,
+                p.postType = :postType,
+                p.updatedAt = CURRENT_TIMESTAMP
+            where p.id = :id
+            """)
+    void update(Long id, String title, String content, PostType postType);
 
-    void readPostBySomeone(Post post);
+    @Modifying
+    @Query("""
+            update Post p
+            set p.watch = p.watch + 1
+            where p.id = :id
+            """)
+    void readPostBySomeone(Long id);
 
-    void likeBySomeone(Long post_id);
+    @Modifying
+    @Query("""
+            update Post p
+            set p.likeCount = p.likeCount + 1
+            where p.id = :post_id
+            """)
+    void increaseLikeCount(Long post_id);
 
+    @Modifying
+    @Query("""
+            update Post p
+            set p.likeCount = p.likeCount - 1
+            where p.id = :post_id
+            """)
     void unlikeBySomeone(Long post_id);
 
-    void writeCommentBySomeone(Post post);
+    @Modifying
+    @Query("""
+            update Post p
+            set p.commentCount = p.commentCount + 1
+            where p.id = :post_id
+            """)
+    void writeCommentBySomeone(Long post_id);
 
+    @Modifying
+    @Query("""
+            update Post p
+            set p.commentCount = p.commentCount - 1
+            where p.id = :id
+            """)
     void deleteCommentBySomeone(Post post);
 
-    void deletePostByPostId(Long post_id);
+    void deletePostById(Long post_id);
 
 }

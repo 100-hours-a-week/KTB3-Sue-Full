@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.BatchSize;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ import java.util.List;
         allocationSize = 50
 )
 @Table(name = "posts")
-public class Post {
+public class Post extends AbstractAuditable {
 
     @Schema(description = "게시글 아이디", example = "1L")
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_seq")
@@ -61,11 +63,12 @@ public class Post {
     private Integer commentCount;
 
     @Schema(description = "게시글 생성일자", example = "20251020T10:00:00")
-    @Column(name = "createdAt", nullable = false)
+    @CreatedDate
+    @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Schema(description = "게시글 수정일자", example = "20251020T10:00:00")
-    @Setter
+    @LastModifiedDate
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 

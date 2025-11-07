@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PostServiceImpl implements PostService {
     private final PostRepository databasePostRepository;
     private final PostImagesRepository databasePostImageRepository;
@@ -28,6 +29,7 @@ public class PostServiceImpl implements PostService {
     private final CommentRepository databaseCommentRepository;
 
     @Override
+    @Transactional
     public PostResponse write(CreatePostRequest req) {
         if (req.getTitle().isEmpty() || req.getContent().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
@@ -83,8 +85,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponse getPostByPostId(Long post_id) {
-        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if (findPost.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -92,7 +95,7 @@ public class PostServiceImpl implements PostService {
         Post post = findPost.get();
         User author = post.getAuthor();
 
-        databasePostRepository.readPostBySomeone(post);
+        databasePostRepository.readPostBySomeone(post.getId());
 
         Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(author.getId());
 
@@ -121,7 +124,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostResponse> getPostByAuthorId(Long authorId) {
-        List<Post> posts = databasePostRepository.findPostByPostAuthorId(authorId);
+        List<Post> posts = databasePostRepository.findPostByPostAuthor_Id(authorId);
         if (posts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -186,8 +189,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponse updatePost(Long post_id, UpdatePostRequest req){
-        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -216,9 +220,8 @@ public class PostServiceImpl implements PostService {
         data.changeTitle(req.getTitle());
         data.changeContent(req.getContent());
         data.changePostType(req.getPostType());
-        data.setUpdatedAt(LocalDateTime.now());
 
-        databasePostRepository.update(data);
+        databasePostRepository.update(data.getId(), data.getTitle(), data.getContent(), data.getPostType());
 
         if (!req.getImages().isEmpty()) {
             databasePostImageRepository.deleteAllPostImagesByPostId(data.getId());
@@ -236,8 +239,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponse deletePost(Long post_id, Long user_id){
-        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -254,7 +258,7 @@ public class PostServiceImpl implements PostService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        databasePostRepository.deletePostByPostId(post_id);
+        databasePostRepository.deletePostById(post_id);
 
         UserProfile profile = findProfile.get();
 

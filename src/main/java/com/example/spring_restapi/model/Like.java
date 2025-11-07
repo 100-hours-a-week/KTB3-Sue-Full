@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
         allocationSize = 30
 )
 @Table(name = "likes")
-public class Like {
+public class Like extends AbstractAuditable {
 
     @Schema(description = "좋아요 아이디", example = "3L")
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "like_seq")
@@ -35,12 +37,12 @@ public class Like {
     private User user;
 
     @Schema(description = "좋아요 생성일자", example = "20251020T10:00:00")
-    @Setter
-    @Column(name = "createdAt", nullable = false)
+    @CreatedDate
+    @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Schema(description = "좋아요 수정일자", example = "20251020T10:00:00")
-    @Setter
+    @LastModifiedDate
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 

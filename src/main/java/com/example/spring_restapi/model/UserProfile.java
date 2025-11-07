@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
         sequenceName = "user_profile_seq",
         allocationSize = 50
 )
-public class UserProfile {
+public class UserProfile extends AbstractAuditable {
 
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_profile_seq")
     @Column(name = "user_profile_id", nullable = false)
@@ -49,12 +51,12 @@ public class UserProfile {
     private Boolean isPrivate;
 
     @Schema(description = "사용자 프로필 생성일자", example = "20251020T10:00:00")
-    @Setter
-    @Column(name = "createdAt", nullable = false)
+    @CreatedDate
+    @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Schema(description = "사용자 프로필 수정일자", example = "20251020T10:00:00")
-    @Setter
+    @LastModifiedDate
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 

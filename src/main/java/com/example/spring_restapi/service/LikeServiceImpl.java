@@ -24,6 +24,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LikeServiceImpl implements LikeService{
     private final LikeRepository databaseLikeRepository;
     private final UserRepository databaseUserRepository;
@@ -31,14 +32,13 @@ public class LikeServiceImpl implements LikeService{
     private final PostRepository databasePostRepository;
 
     @Override
-    @Transactional
     public void validate(Long post_id, UserIdBodyRequest req){
 
         if(databaseUserRepository.findUserById(req.getUser_id()).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostById(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
@@ -53,7 +53,7 @@ public class LikeServiceImpl implements LikeService{
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already_likes");
         }
 
-        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -69,7 +69,7 @@ public class LikeServiceImpl implements LikeService{
         Like like = Like.create(likePost, likeUser);
 
         databaseLikeRepository.save(like);
-        databasePostRepository.likeBySomeone(post_id);
+        databasePostRepository.increaseLikeCount(post_id);
 
         Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByUserId(like.getUser().getId());
         if(findUserProfile.isEmpty()){
@@ -82,9 +82,8 @@ public class LikeServiceImpl implements LikeService{
     }
 
     @Override
-    @Transactional
     public Integer getLikeCount(Long post_id){
-        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostById(post_id);
 
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -108,7 +107,7 @@ public class LikeServiceImpl implements LikeService{
 
         Like unlike = data.get();
 
-        databaseLikeRepository.deleteLike(unlike.getId());
+        databaseLikeRepository.deleteLikeOfPostByUserId(post_id, req.getUser_id());
         databasePostRepository.unlikeBySomeone(post_id);
 
         Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByUserId(unlike.getUser().getId());
@@ -125,7 +124,7 @@ public class LikeServiceImpl implements LikeService{
     @Transactional
     public LikeListResponse getLikes(Long post_id){
 
-        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostById(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 

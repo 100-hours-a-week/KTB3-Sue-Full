@@ -11,30 +11,29 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Repository
-public class DatabaseCommentRepository implements CommentRepository{
+public class DatabaseCommentRepository {
 
     @PersistenceContext
     EntityManager em;
 
     public DatabaseCommentRepository(){}
 
-    @Override
+//    @Override
     @Transactional
     public void save(Comment comment){
         em.persist(comment);
     }
 
-    @Override
+//    @Override
     @Transactional
     public Optional<Comment> update(Comment comment){
         Comment updateComment = em.find(Comment.class, comment.getId());
         updateComment.changeContent(comment.getContent());
-        updateComment.setUpdatedAt(LocalDateTime.now());
 
         return Optional.of(updateComment);
     }
 
-    @Override
+//    @Override
     @Transactional
     public Optional<Comment> deleteComment(Comment comment){
         Comment deleteComment = em.find(Comment.class, comment.getId());
@@ -42,16 +41,16 @@ public class DatabaseCommentRepository implements CommentRepository{
         return Optional.of(deleteComment);
     }
 
-    @Override
+//    @Override
     @Transactional
     public List<Comment> deleteCommentByPostId(Long post_id){
-        List<Comment> deleteComments = findCommentsByPosId(post_id);
+        List<Comment> deleteComments = findCommentsByPostId(post_id);
         deleteComments.forEach(deleteCommnet -> deleteCommnet.setDeletedAt(LocalDateTime.now()));
 
         return deleteComments;
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public Optional<Comment> findCommentByCommentId(Long comment_id){
         TypedQuery<Comment> query = em.createQuery("""
@@ -66,9 +65,9 @@ public class DatabaseCommentRepository implements CommentRepository{
         return Optional.ofNullable(query.getSingleResult());
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
-    public List<Comment> findCommentsByPosId(Long post_id){
+    public List<Comment> findCommentsByPostId(Long post_id){
         TypedQuery<Comment> query = em.createQuery("""
                 select c
                 from Comment c

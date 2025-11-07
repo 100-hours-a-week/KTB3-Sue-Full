@@ -1,21 +1,37 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.Comment;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface CommentRepository {
+@Repository
+public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    void save(Comment comment);
+    @Modifying
+    @Query("""
+            update Comment c
+            set c.content = :content,
+                c.updatedAt = CURRENT_TIMESTAMP
+            where c.id = :id and c.deletedAt IS NULL
+            """)
+    void updateComment(Long id, String content);
 
-    Optional<Comment> update(Comment comment);
+    @Modifying
+    @Query("""
+            delete
+            from Comment c
+            where c.id = :id
+            """)
+    void deleteComment(Long id);
 
-    Optional<Comment> deleteComment(Comment comment);
+    void deleteCommentByPostId(Long post_id);
 
-    List<Comment> deleteCommentByPostId(Long post_id);
+    Optional<Comment> findCommentById(Long comment_id);
 
-    Optional<Comment> findCommentByCommentId(Long comment_id);
-
-    List<Comment> findCommentsByPosId(Long post_id);
+    List<Comment> findCommentsByPostId(Long post_id);
 }

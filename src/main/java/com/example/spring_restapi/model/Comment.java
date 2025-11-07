@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
         allocationSize = 50
 )
 @Table(name = "comments")
-public class Comment {
+public class Comment extends AbstractAuditable {
     @Schema(description = "댓글 아이디", example = "2L")
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "comment_seq")
     @Column(name = "comment_id", nullable = false)
@@ -38,11 +40,12 @@ public class Comment {
     private String content;
 
     @Schema(description = "댓글 작성일자", example = "20251020T10:00:00")
-    @Column(name = "createdAt", nullable = false)
+    @CreatedDate
+    @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Schema(description = "댓글 수정일자", example = "20251020T10:00:00")
-    @Setter
+    @LastModifiedDate
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 

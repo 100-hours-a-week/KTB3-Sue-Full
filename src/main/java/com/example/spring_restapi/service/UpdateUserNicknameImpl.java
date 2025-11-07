@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ public class UpdateUserNicknameImpl implements UpdateUserService<UserProfileResp
     private final UserProfileRepository databaseUserProfileRepository;
 
     @Override
+    @Transactional
     public UserProfileResponse update(Long user_id, UpdateUserNicknameRequest req){
         Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByUserId(user_id);
 

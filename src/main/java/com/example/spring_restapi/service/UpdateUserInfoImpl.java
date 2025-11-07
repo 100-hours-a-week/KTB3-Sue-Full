@@ -41,9 +41,8 @@ public class UpdateUserInfoImpl implements UpdateUserService<UserInfoResponse, U
         updateUser.changeEmail(req.getEmail());
         updateUser.changePassword(req.getNewPassword(), req.getNewPasswordConfirm());
         updateUser.changeUserRole(req.getUserRole());
-        updateUser.setUpdatedAt(LocalDateTime.now());
 
-        databaseUserRepository.update(updateUser);
+        databaseUserRepository.update(updateUser.getEmail(), updateUser.getPassword(), updateUser.getUserRole());
 
         return new UserInfoResponse(
                 updateUser.getId(), updateUser.getEmail(), updateUser.getUserRole());

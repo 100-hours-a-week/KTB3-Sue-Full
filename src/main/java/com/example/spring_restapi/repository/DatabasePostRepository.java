@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Repository
-public class DatabasePostRepository implements PostRepository {
+public class DatabasePostRepository {
 
     @PersistenceContext
     EntityManager em;
@@ -19,13 +19,13 @@ public class DatabasePostRepository implements PostRepository {
     public DatabasePostRepository(){
     }
 
-    @Override
+//    @Override
     @Transactional
     public void save(Post post){
         em.persist(post);
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public List<Post> findAllPost(){
         TypedQuery<Post> query = em.createQuery("""
@@ -37,7 +37,7 @@ public class DatabasePostRepository implements PostRepository {
         return query.getResultList();
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public List<Post> findPostsOfPage(int page, int size){
         TypedQuery<Post> query = em.createQuery("""
@@ -53,7 +53,7 @@ public class DatabasePostRepository implements PostRepository {
         return query.getResultList();
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public Optional<Post> findPostByPostId(Long post_id){
         TypedQuery<Post> query = em.createQuery("""
@@ -68,7 +68,7 @@ public class DatabasePostRepository implements PostRepository {
         return Optional.ofNullable(query.getSingleResult());
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public List<Post> findPostByPostAuthorId(Long author_id){
         TypedQuery<Post> query = em.createQuery("""
@@ -83,7 +83,7 @@ public class DatabasePostRepository implements PostRepository {
         return query.getResultList();
     }
 
-    @Override
+//    @Override
     @Transactional
     public void update(Post post) {
         Post updatePost = em.find(Post.class, post.getId());
@@ -91,46 +91,45 @@ public class DatabasePostRepository implements PostRepository {
         updatePost.changeTitle(post.getTitle());
         updatePost.changeContent(post.getContent());
         updatePost.changePostType(post.getPostType());
-        updatePost.setUpdatedAt(LocalDateTime.now());
 
     }
 
-    @Override
+//    @Override
     @Transactional
     public void readPostBySomeone(Post post){
         Post readPost = em.find(Post.class, post.getId());
         readPost.increaseWatch();
     }
 
-    @Override
+//    @Override
     @Transactional
     public void likeBySomeone(Long post_id) {
         Post readPost = em.find(Post.class, post_id);
         readPost.increaseLikeCount();
     }
 
-    @Override
+//    @Override
     @Transactional
     public void unlikeBySomeone(Long post_id) {
         Post readPost = em.find(Post.class, post_id);
         readPost.decreaseLikeCount();
     }
 
-    @Override
+//    @Override
     @Transactional
     public void writeCommentBySomeone(Post post){
         Post readPost = em.find(Post.class, post.getId());
         readPost.increaseCommentCount();
     }
 
-    @Override
+//    @Override
     @Transactional
     public void deleteCommentBySomeone(Post post){
         Post readPost = em.find(Post.class, post.getId());
         readPost.decreaseCommentCount();
     }
 
-    @Override
+//    @Override
     @Transactional
     public void deletePostByPostId(Long post_id){
         Post deletePost = em.find(Post.class, post_id);

@@ -15,6 +15,7 @@ import com.example.spring_restapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository databaseCommentRepository;
     private final PostRepository databasePostRepository;
@@ -31,11 +33,11 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentListResponse getCommentsByPostId(Long post_id){
-        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostById(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        List<Comment> comments = databaseCommentRepository.findCommentsByPosId(post_id);
+        List<Comment> comments = databaseCommentRepository.findCommentsByPostId(post_id);
         List<CommentResponse> data = comments.stream().map(
                 comment -> {
                     Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(comment.getUser().getId());
@@ -50,8 +52,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentResponse writeComment(Long post_id, CreateCommentRequest req){
-        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -65,7 +68,7 @@ public class CommentServiceImpl implements CommentService {
         Comment newComment = new Comment(findPost.get(), findUser.get(), req.getContent());
 
         databaseCommentRepository.save(newComment);
-        databasePostRepository.writeCommentBySomeone(findPost.get());
+        databasePostRepository.writeCommentBySomeone(findPost.get().getId());
 
         Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(newComment.getUser().getId());
         if(findProfile.isEmpty()){
@@ -76,8 +79,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentResponse updateComment(Long post_id, Long comment_id, UpdateCommentRequest req){
-        Optional<Post> findPost = databasePostRepository.findPostByPostId(post_id);
+        Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if(findPost.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -88,7 +92,7 @@ public class CommentServiceImpl implements CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Optional<Comment> find = databaseCommentRepository.findCommentByCommentId(comment_id);
+        Optional<Comment> find = databaseCommentRepository.findCommentById(comment_id);
 
         if(find.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -96,33 +100,28 @@ public class CommentServiceImpl implements CommentService {
 
         Comment update = find.get();
         update.changeContent(req.getContent());
-        update.setUpdatedAt(LocalDateTime.now());
 
-        Optional<Comment> updateComment = databaseCommentRepository.update(update);
+        databaseCommentRepository.updateComment(update.getId(), update.getContent());
 
-        if(updateComment.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
 
-        Comment comment = updateComment.get();
-
-        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(comment.getUser().getId());
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(update.getUser().getId());
         if(findProfile.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return new CommentResponse(comment.getId(), findPost.get().getId(), req.getUser_id(), req.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
+        return new CommentResponse(update.getId(), findPost.get().getId(), req.getUser_id(), req.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
     }
 
     @Override
+    @Transactional
     public CommentResponse deleteComment(Long post_id, Long comment_id, Long user_id){
-        if(databasePostRepository.findPostByPostId(post_id).isEmpty()){
+        if(databasePostRepository.findPostById(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        Post findPost = databasePostRepository.findPostByPostId(post_id).get();
+        Post findPost = databasePostRepository.findPostById(post_id).get();
 
-        Optional<Comment> find = databaseCommentRepository.findCommentByCommentId(comment_id);
+        Optional<Comment> find = databaseCommentRepository.findCommentById(comment_id);
 
         if(find.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
@@ -132,13 +131,11 @@ public class CommentServiceImpl implements CommentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
 
-        Optional<Comment> deleteComment = databaseCommentRepository.deleteComment(find.get());
 
-        if(deleteComment.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
-        }
 
-        Comment comment = deleteComment.get();
+        Comment comment = find.get();
+
+        databaseCommentRepository.deleteComment(comment.getId());
 
         Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(comment.getUser().getId());
         if(findProfile.isEmpty()){

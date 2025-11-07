@@ -12,19 +12,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class DatabasePostImagesRepository implements PostImagesRepository{
+public class DatabasePostImagesRepository {
 
     @PersistenceContext
     EntityManager em;
     public DatabasePostImagesRepository(){}
 
-    @Override
+//    @Override
     @Transactional
     public void save(PostImages postImages) {
         em.persist(postImages);
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public List<PostImages> findPostImagesByPostId(Long post_id) {
         TypedQuery<PostImages> query = em.createQuery("""
@@ -39,7 +39,7 @@ public class DatabasePostImagesRepository implements PostImagesRepository{
         return query.getResultList();
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public List<PostImages> findAllThumbnail() {
         TypedQuery<PostImages> query = em.createQuery("""
@@ -52,7 +52,7 @@ public class DatabasePostImagesRepository implements PostImagesRepository{
         return query.getResultList();
     }
 
-    @Override
+//    @Override
     @Transactional(readOnly = true)
     public Optional<PostImages> findThumbnailByPostId(Long post_id) {
         TypedQuery<PostImages> query = em.createQuery("""
@@ -68,7 +68,7 @@ public class DatabasePostImagesRepository implements PostImagesRepository{
         return Optional.ofNullable(query.getSingleResult());
     }
 
-    @Override
+//    @Override
     @Transactional
     public PostImages deletePostImagesById(Long id) {
         PostImages deleteImage = em.find(PostImages.class, id);
@@ -76,7 +76,7 @@ public class DatabasePostImagesRepository implements PostImagesRepository{
         return deleteImage;
     }
 
-    @Override
+//    @Override
     @Transactional
     public List<PostImages> deleteAllPostImagesByPostId(Long post_id) {
         List<PostImages> deleteImages = findPostImagesByPostId(post_id);

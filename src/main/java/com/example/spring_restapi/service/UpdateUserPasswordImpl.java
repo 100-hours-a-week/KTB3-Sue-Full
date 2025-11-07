@@ -36,7 +36,7 @@ public class UpdateUserPasswordImpl implements UpdateUserService<UserInfoRespons
 
         updateUser.changePassword(req.getNewPassword(), req.getNewPasswordConfirm());
 
-        databaseUserRepository.update(updateUser);
+        databaseUserRepository.updatePassword(updateUser.getId(), req.getNewPassword());
 
         return new UserInfoResponse(
                 updateUser.getId(), updateUser.getEmail(), updateUser.getUserRole()
