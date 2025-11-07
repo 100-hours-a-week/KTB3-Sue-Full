@@ -1,63 +1,75 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.User;
+import com.example.spring_restapi.model.UserRole;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class UserRepository {
-    private final Map<Long, User> userMap = new LinkedHashMap<>();
-    private long sequence;
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    public UserRepository(){
-        sequence = 0;
-        User user1 = new User(null, "osj1405@naver.com", "osj1405", "sue", null, null, null);
-        User user2 = new User(null, "osujin35@naver.com", "osujin35", "sujin", null, null, null);
-        User user3 = new User(null, "duckjin1405@gmail.com", "duckjin1405", "osj", null, null, null);
+    @Query("""
+            select u
+            from User u
+            where u.id = :user_id
+            and u.deletedAt IS NULL
+            """)
+    Optional<User> findUserById(Long user_id);
 
-        save(user1);
-        save(user2);
-        save(user3);
-    }
+    @Query("""
+            select u
+            from User u
+            where u.email = :email
+            and u.deletedAt IS NULL
+            """)
+    Optional<User> findUserByEmail(String email);
 
-    public User save(User user){
-        sequence++;
-        if(Optional.ofNullable(user.getUser_id()).isEmpty()){
-            user.setUser_id(sequence);
-        }
-        userMap.put(user.getUser_id(), user);
-        return userMap.get(user.getUser_id());
-    }
+    @Modifying
+    @Query("""
+            update User u
+            set u.email = :email,
+                u.password = :password,
+                u.userRole = :userRole
+            """)
+    void update(String email, String password, UserRole userRole);
 
-    public List<User> findAllUser(){
-        List<User> users = new ArrayList<>();
-        for(Long user_id: userMap.keySet()){
-            User user = userMap.get(user_id);
-            users.add(user);
-        }
-        return users;
-    }
+    @Modifying
+    @Query("""
+            update User u
+            set u.email = :email
+            where u.id = :user_id
+            """)
+    void updateEmail(Long user_id, String email);
 
-    public Optional<User> findUserById(Long user_id){
-        return Optional.ofNullable(userMap.get(user_id));
-    }
+    @Modifying
+    @Query("""
+            update User u
+            set u.password = :password
+            where u.id = :user_id
+            """)
+    void updatePassword(Long user_id, String password);
 
-    public Optional<User> findUserByEmail(String email){
-        for(Map.Entry<Long, User> entry: userMap.entrySet()){
-            User user = entry.getValue();
-            if(user.getEmail().equals(email)){
-                return Optional.of(user);
-            }
-        }
-        return Optional.empty();
-    }
+    @Modifying
+    @Query("""
+            update User u
+            set u.userRole = :userRole
+            where u.id = :user_id
+            """)
+    void updateUserRole(Long user_id, UserRole userRole);
 
-    public Optional<User> update(User user){
-        return Optional.ofNullable(userMap.put(user.getUser_id(), user));
-    }
-
-    public User deleteUserById(Long user_id){
-        return userMap.remove(user_id);
-    }
+    @Modifying
+    @Query("""
+            update User u
+            set u.deletedAt = CURRENT_TIMESTAMP
+            where u.id = :user_id
+            """)
+    void deleteUserById(Long user_id);
 }

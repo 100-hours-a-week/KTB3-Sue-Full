@@ -2,21 +2,22 @@ package com.example.spring_restapi.controller;
 
 import com.example.spring_restapi.dto.request.UserIdBodyRequest;
 import com.example.spring_restapi.dto.response.CommonResponse;
-import com.example.spring_restapi.model.Like;
+import com.example.spring_restapi.dto.response.LikeResponse;
 import com.example.spring_restapi.service.LikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/posts/{post_id}/likes")
 public class LikeController {
-    private final LikeService likeService;
+    private final LikeService likeServiceImpl;
 
-    public LikeController(LikeService likeService){
-        this.likeService = likeService;
+    public LikeController(LikeService likeServiceImpl){
+        this.likeServiceImpl = likeServiceImpl;
     }
 
     @Operation(summary = "좋아요 누르기", description = "게시물에 좋아요를 누름")
@@ -25,13 +26,13 @@ public class LikeController {
             @ApiResponse(responseCode = "409", description = "이미 좋아요를 누른 게시물임")
     })
     @PostMapping
-    public ResponseEntity<CommonResponse<Like>> like(
+    public ResponseEntity<CommonResponse<LikeResponse>> like(
             @PathVariable Long post_id,
             @RequestBody UserIdBodyRequest req
             ){
-        Like like = likeService.like(post_id, req);
+        LikeResponse like = likeServiceImpl.like(post_id, req);
 
-        CommonResponse<Like> res = CommonResponse.success("like_success", like);
+        CommonResponse<LikeResponse> res = CommonResponse.success("like_success", like);
         return ResponseEntity.status(201).body(res);
     }
 
@@ -44,7 +45,7 @@ public class LikeController {
     public ResponseEntity<CommonResponse<Integer>> getLikeCount(
             @PathVariable Long post_id
     ){
-        int likeCount = likeService.getLikeCount(post_id);
+        int likeCount = likeServiceImpl.getLikeCount(post_id);
 
         CommonResponse<Integer> res = CommonResponse.success("read_like_success", likeCount);
         return ResponseEntity.ok(res);
@@ -57,13 +58,31 @@ public class LikeController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
     })
     @DeleteMapping
-    public ResponseEntity<CommonResponse<Like>> unlike(
+    public ResponseEntity<CommonResponse<LikeResponse>> unlike(
             @PathVariable Long post_id,
             @RequestBody UserIdBodyRequest req
     ){
-        Like like = likeService.unlike(post_id, req);
+        LikeResponse like = likeServiceImpl.unlike(post_id, req);
 
-        CommonResponse<Like> res = CommonResponse.success("unlike_success", like);
+        CommonResponse<LikeResponse> res = CommonResponse.success("unlike_success", like);
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "좋아요 목록", description = "게시물의 좋아요 목록을 가져옴")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "좋아요 목록 로딩 성공"),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
+    })
+    @GetMapping("/list")
+    public ResponseEntity<CommonResponse<Slice<LikeResponse>>> getLikes(
+            @PathVariable Long post_id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "desc") String direction
+    ){
+        Slice<LikeResponse >like = likeServiceImpl.getLikes(post_id, page, size, direction);
+
+        CommonResponse<Slice<LikeResponse>> res = CommonResponse.success("read_like_list_success", like);
         return ResponseEntity.ok(res);
     }
 }

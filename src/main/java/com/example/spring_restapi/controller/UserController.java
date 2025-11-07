@@ -1,26 +1,28 @@
 package com.example.spring_restapi.controller;
 
-import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.dto.request.*;
 import com.example.spring_restapi.dto.response.CommonResponse;
+import com.example.spring_restapi.dto.response.UserInfoResponse;
+import com.example.spring_restapi.dto.response.UserProfileResponse;
 import com.example.spring_restapi.dto.response.UserResponse;
-import com.example.spring_restapi.dto.response.SignUpResponse;
 import com.example.spring_restapi.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/accounts")
 public class UserController {
-    private final UserService userService;
-
-    public UserController(UserService userService){
-        this.userService = userService;
-    }
+    private final UserService userServiceImpl;
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호를 이용하여 로그인")
     @ApiResponses({
@@ -29,12 +31,12 @@ public class UserController {
     })
     @PostMapping
     public ResponseEntity<CommonResponse<UserResponse>> login(@RequestBody LoginRequest req){
-        User loginUser = userService.login(req);
 
-        UserResponse data = new UserResponse(loginUser.getUser_id(), loginUser.getNickname(), loginUser.getProfileImage(), loginUser.getIntroduce());
+        UserResponse data = userServiceImpl.login(req);
 
         CommonResponse<UserResponse> res = CommonResponse.success("login_success", data);
         return ResponseEntity.ok(res);
+
     }
 
     @Operation(summary = "회원가입", description = "새로운 유저 정보를 시스템에 등록")
@@ -44,10 +46,10 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "이메일 또는 비밀번호 값을 입력하지 않음")
     })
     @PostMapping("/user")
-    public ResponseEntity<CommonResponse<SignUpResponse>> signup(@RequestBody SignUpRequest req){
-        SignUpResponse data = userService.signup(req);
+    public ResponseEntity<CommonResponse<UserResponse>> signup(@RequestBody SignUpRequest req){
+        UserResponse data = userServiceImpl.signup(req);
 
-        CommonResponse<SignUpResponse> res = CommonResponse.success("signup_success", data);
+        CommonResponse<UserResponse> res = CommonResponse.success("signup_success", data);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
@@ -58,12 +60,11 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음")
     })
     @PatchMapping("/{user_id}")
-    public ResponseEntity<CommonResponse<UserResponse>> updateUser(@PathVariable Long user_id, @RequestBody UpdateUserRequest req){
-        User updateUser = userService.updateUser(user_id, req);
+    public ResponseEntity<CommonResponse<UserInfoResponse>> updateUser(@PathVariable Long user_id, @RequestBody UpdateUserInfoRequest req){
 
-        UserResponse data = new UserResponse(updateUser.getUser_id(), updateUser.getNickname(), updateUser.getProfileImage(), updateUser.getIntroduce());
+        UserInfoResponse data = userServiceImpl.updateUserInfo(user_id, req);
 
-        CommonResponse<UserResponse> res = CommonResponse.success("profile_edit_success", data);
+        CommonResponse<UserInfoResponse> res = CommonResponse.success("profile_edit_success", data);
 
         return ResponseEntity.ok(res);
     }
@@ -76,9 +77,9 @@ public class UserController {
     @DeleteMapping("/{user_id}")
     public ResponseEntity<CommonResponse<UserResponse>> deleteUser(@PathVariable Long user_id){
 
-        User removeUser = userService.removeUser(user_id);
+        UserResponse data = userServiceImpl.removeUser(user_id);
 
-        CommonResponse<UserResponse> res = CommonResponse.success("delete_user_success", null);
+        CommonResponse<UserResponse> res = CommonResponse.success("delete_user_success", data);
 
         return ResponseEntity.ok(res);
     }
@@ -89,10 +90,10 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음")
     })
     @GetMapping("/{user_id}")
-    public ResponseEntity<CommonResponse<User>> findUserById(@PathVariable Long user_id){
-        User findUser = userService.getUserById(user_id);
+    public ResponseEntity<CommonResponse<UserResponse>> findUserById(@PathVariable Long user_id){
+        UserResponse data = userServiceImpl.getUserById(user_id);
 
-        CommonResponse<User> res = new CommonResponse<>("read_userinfo_success", findUser, null);
+        CommonResponse<UserResponse> res = new CommonResponse<>("read_userinfo_success", data, null);
 
         return ResponseEntity.ok(res);
     }
@@ -103,11 +104,10 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "비밀번호가 일치하지 않음")
     })
     @PutMapping("/{user_id}/password")
-    public ResponseEntity<CommonResponse<UserResponse>>  updateUserPassword(@PathVariable Long user_id, @RequestBody UpdatePasswordRequest req){
-        User updateUser = userService.updateUserPassword(user_id, req);
+    public ResponseEntity<CommonResponse<UserInfoResponse>>  updateUserPassword(@PathVariable Long user_id, @RequestBody UpdatePasswordRequest req){
+        UserInfoResponse data = userServiceImpl.updateUserPassword(user_id, req);
 
-        UserResponse data = new UserResponse(updateUser.getUser_id(), updateUser.getNickname(), updateUser.getProfileImage(), updateUser.getIntroduce());
-        CommonResponse<UserResponse> res = CommonResponse.success("update_password_success", data);
+        CommonResponse<UserInfoResponse> res = CommonResponse.success("update_password_success", data);
 
         return ResponseEntity.ok(res);
     }
@@ -115,33 +115,102 @@ public class UserController {
     @Operation(summary = "유저 닉네임 변경", description = "시스템에 등록된 유저의 닉네임을 변경")
     @ApiResponse(responseCode = "200", description = "유저 닉네임 변경 성공")
     @PutMapping("/{user_id}/nickname")
-    public ResponseEntity<CommonResponse<UserResponse>> updateUserNickname(@PathVariable Long user_id, @RequestBody UpdateUserNicknameRequest req){
-        User updateUser = userService.updateUserNickname(user_id, req);
+    public ResponseEntity<CommonResponse<UserProfileResponse>> updateUserNickname(@PathVariable Long user_id, @RequestBody UpdateUserNicknameRequest req){
 
-        UserResponse data = new UserResponse(updateUser.getUser_id(), updateUser.getNickname(), updateUser.getProfileImage(), updateUser.getIntroduce());
-        CommonResponse<UserResponse> res = CommonResponse.success("update_nickname_success", data);
+        UserProfileResponse data = userServiceImpl.updateUserNickname(user_id, req);
+
+        CommonResponse<UserProfileResponse> res = CommonResponse.success("update_nickname_success", data);
+
         return ResponseEntity.ok(res);
+
     }
 
     @Operation(summary = "유저 프로필 이미지 변경", description = "시스템에 등록된 유저의 프로필 이미지를 변경")
     @ApiResponse(responseCode = "200", description = "유저 프로필 이미지 변경 성공")
     @PutMapping("/{user_id}/profile_image")
-    public ResponseEntity<CommonResponse<UserResponse>> updateUserProfileImage(@PathVariable Long user_id, @RequestBody UpdateUserProfileImageRequest req){
-        User updateUser = userService.updateUserProfileImage(user_id, req);
+    public ResponseEntity<CommonResponse<UserProfileResponse>> updateUserProfileImage(@PathVariable Long user_id, @RequestBody UpdateUserProfileImageRequest req){
+        UserProfileResponse data = userServiceImpl.updateUserProfileImage(user_id, req);
 
-        UserResponse data = new UserResponse(updateUser.getUser_id(), updateUser.getNickname(), updateUser.getProfileImage(), updateUser.getIntroduce());
-        CommonResponse<UserResponse> res = CommonResponse.success("update_profile_image_success", data);
+        CommonResponse<UserProfileResponse> res = CommonResponse.success("update_profile_image_success", data);
         return ResponseEntity.ok(res);
     }
 
     @Operation(summary = "유저 소개말 변경", description = "시스템에 등록된 유저의 소개말 변경")
     @ApiResponse(responseCode = "200", description = "유저 소개말 변경 성공")
     @PutMapping("/{user_id}/introduce")
-    public ResponseEntity<CommonResponse<UserResponse>> updateUserIntroduce(@PathVariable Long user_id, @RequestBody UpdateUserIntroduceRequest req){
-        User updateUser = userService.updateUserIntroduce(user_id, req);
+    public ResponseEntity<CommonResponse<UserProfileResponse>> updateUserIntroduce(@PathVariable Long user_id, @RequestBody UpdateUserIntroduceRequest req){
+        UserProfileResponse data = userServiceImpl.updateUserIntroduce(user_id, req);
 
-        UserResponse data = new UserResponse(updateUser.getUser_id(), updateUser.getNickname(), updateUser.getProfileImage(), updateUser.getIntroduce());
-        CommonResponse<UserResponse> res = CommonResponse.success("update_profile_introduce_success", data);
+        CommonResponse<UserProfileResponse> res = CommonResponse.success("update_profile_introduce_success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "유저 성별 변경", description = "시스템에 등록된 유저의 성별 변경")
+    @ApiResponse(responseCode = "200", description = "유저 성별 변경 성공")
+    @PutMapping("/{user_id}/gender")
+    public ResponseEntity<CommonResponse<UserProfileResponse>> updateUserGender(@PathVariable Long user_id, @RequestBody UpdateUserGenderRequest req){
+        UserProfileResponse data = userServiceImpl.updateUserGender(user_id, req);
+
+        CommonResponse<UserProfileResponse> res = CommonResponse.success("update_profile_gender_success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "유저 계정 비공개 여부 변경", description = "시스템에 등록된 유저의 계정 비공개 여부 변경")
+    @ApiResponse(responseCode = "200", description = "유저 계정 비공개 여부 변경 성공")
+    @PutMapping("/{user_id}/private")
+    public ResponseEntity<CommonResponse<UserProfileResponse>> updateUserProfileIsPrivate(@PathVariable Long user_id, @RequestBody UpdateUserProfileIsPrivateRequest req){
+        UserProfileResponse data = userServiceImpl.updateUserProfileIsPrivate(user_id, req);
+
+        CommonResponse<UserProfileResponse> res = CommonResponse.success("update_profile_is_private_success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    // Pageable
+    @Operation(summary = "키워드를 포함한 닉네임을 가진 유저 검색 - 리스트", description = "주어진 키워드가 포함된 닉네임의 유저 리스트 조회")
+    @ApiResponse(responseCode = "200", description = "닉네임 검색 성공")
+    @GetMapping("/search/list")
+    public ResponseEntity<CommonResponse<List<UserProfileResponse>>> searchList(@RequestParam String keyword) {
+        List<UserProfileResponse> data = userServiceImpl.searchAsList(keyword);
+
+        CommonResponse<List<UserProfileResponse>> res = CommonResponse.success("nickname search success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "키워드를 포함한 닉네임을 가진 유저 검색 - 페이징", description = "주어진 키워드가 포함된 닉네임의 유저 리스트 조회")
+    @ApiResponse(responseCode = "200", description = "닉네임 검색 성공")
+    @GetMapping("/search/page")
+    public ResponseEntity<CommonResponse<Page<UserProfileResponse>>> searchPage(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        Page<UserProfileResponse> data = userServiceImpl.searchAsPage(keyword, page, size, sortBy, direction);
+
+        CommonResponse<Page<UserProfileResponse>> res = CommonResponse.success("nickname search paging success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "키워드를 포함한 닉네임을 가진 유저 검색 - 슬라이스", description = "주어진 키워드가 포함된 닉네임의 유저 리스트 조회")
+    @ApiResponse(responseCode = "200", description = "닉네임 검색 성공")
+    @GetMapping("/search/slice")
+    public ResponseEntity<CommonResponse<Slice<UserProfileResponse>>> searchSlice(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        Slice<UserProfileResponse> data = userServiceImpl.searchAsSlice(keyword, page, size, sortBy, direction);
+
+        CommonResponse<Slice<UserProfileResponse>> res = CommonResponse.success("nickname search slice success", data);
+
         return ResponseEntity.ok(res);
     }
 

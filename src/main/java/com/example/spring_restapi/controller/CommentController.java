@@ -1,6 +1,6 @@
 package com.example.spring_restapi.controller;
 
-import com.example.spring_restapi.model.Comment;
+import com.example.spring_restapi.dto.response.CommentResponse;
 import com.example.spring_restapi.dto.request.CreateCommentRequest;
 import com.example.spring_restapi.dto.request.UpdateCommentRequest;
 import com.example.spring_restapi.dto.request.UserIdBodyRequest;
@@ -9,18 +9,17 @@ import com.example.spring_restapi.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/posts/{post_id}/comments")
 public class CommentController {
-    private final CommentService commentService;
+    private final CommentService commentServiceImpl;
 
-    public CommentController(CommentService commentService){
-        this.commentService = commentService;
+    public CommentController(CommentService commentServiceImpl){
+        this.commentServiceImpl = commentServiceImpl;
     }
 
     @Operation(summary = "댓글 조회", description = "특정 게시물의 댓글을 조회함")
@@ -29,10 +28,15 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
     })
     @GetMapping
-    public ResponseEntity<CommonResponse<List<Comment>>> readCommentsByPostId(@PathVariable Long post_id){
-        List<Comment> data = commentService.getCommentsByPostId(post_id);
+    public ResponseEntity<CommonResponse<Slice<CommentResponse>>> readCommentsByPostId(
+            @PathVariable Long post_id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "desc") String direction
+    ){
+        Slice<CommentResponse> data = commentServiceImpl.getCommentsByPostId(post_id, page, size, direction);
 
-        CommonResponse<List<Comment>> res = CommonResponse.success("read_comments_success", data);
+        CommonResponse<Slice<CommentResponse>> res = CommonResponse.success("read_comments_success", data);
 
         return ResponseEntity.ok(res);
     }
@@ -43,10 +47,10 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
     })
     @PostMapping
-    public ResponseEntity<CommonResponse<Comment>> writeComment(@PathVariable Long post_id, @RequestBody CreateCommentRequest req){
-        Comment data = commentService.writeComment(post_id, req);
+    public ResponseEntity<CommonResponse<CommentResponse>> writeComment(@PathVariable Long post_id, @RequestBody CreateCommentRequest req){
+        CommentResponse data = commentServiceImpl.writeComment(post_id, req);
 
-        CommonResponse<Comment> res = CommonResponse.success("write_comment_success", data);
+        CommonResponse<CommentResponse> res = CommonResponse.success("write_comment_success", data);
 
         return ResponseEntity.status(201).body(res);
     }
@@ -58,10 +62,10 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "게시물이 존재하지 않거나, 댓글이 존재하지 않음")
     })
     @PutMapping("/{comment_id}")
-    public ResponseEntity<CommonResponse<Comment>> updateComment(@PathVariable Long post_id, @PathVariable Long comment_id, @RequestBody UpdateCommentRequest req){
-        Comment data = commentService.updateComment(post_id, comment_id, req);
+    public ResponseEntity<CommonResponse<CommentResponse>> updateComment(@PathVariable Long post_id, @PathVariable Long comment_id, @RequestBody UpdateCommentRequest req){
+        CommentResponse data = commentServiceImpl.updateComment(post_id, comment_id, req);
 
-        CommonResponse<Comment> res = CommonResponse.success("update_comment_success", data);
+        CommonResponse<CommentResponse> res = CommonResponse.success("update_comment_success", data);
 
         return ResponseEntity.status(201).body(res);
     }
@@ -73,10 +77,10 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "게시물이 존재하지 않거나, 댓글이 존재하지 않음")
     })
     @DeleteMapping("/{comment_id}")
-    public ResponseEntity<CommonResponse<Comment>> deleteComment(@PathVariable Long post_id, @PathVariable Long comment_id, @RequestBody UserIdBodyRequest req){
-        Comment data = commentService.deleteComment(post_id, comment_id, req.getUser_id());
+    public ResponseEntity<CommonResponse<CommentResponse>> deleteComment(@PathVariable Long post_id, @PathVariable Long comment_id, @RequestBody UserIdBodyRequest req){
+        CommentResponse data = commentServiceImpl.deleteComment(post_id, comment_id, req.getUser_id());
 
-        CommonResponse<Comment> res = CommonResponse.success("delete_comment_success", data);
+        CommonResponse<CommentResponse> res = CommonResponse.success("delete_comment_success", data);
 
         return ResponseEntity.ok(res);
     }

@@ -1,96 +1,114 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.Post;
+import com.example.spring_restapi.model.PostImages;
+import com.example.spring_restapi.model.PostType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class PostRepository {
-    private final ConcurrentHashMap<Long, Post> postMap = new ConcurrentHashMap<>();
-    private long sequence;
+public interface PostRepository extends JpaRepository<Post, Long> {
 
-    public PostRepository(){
-        sequence = 0;
-        List<String> images1 = new ArrayList<>();
-        images1.add("image1.jpg");
-        images1.add("image2.jpg");
+    @Query("""
+            select p
+            from Post p
+            join fetch p.author
+            where p.deletedAt IS NULL
+            order by p.createdAt
+            """)
+    Page<Post> findPostsOfPage(Pageable pageable);
 
-        List<String> images2 = new ArrayList<>();
-        images1.add("image2.jpg");
-        images1.add("image3.jpg");
+    @Query("""
+            select p
+            from Post p
+            join fetch p.author
+            where p.id = :post_id
+                and p.deletedAt IS NULL
+            """)
+    Optional<Post> findPostById(Long post_id);
 
-        Post post1 = new Post(null, 1L, "1week TIL","my homework post1...", images1, 2, LocalDateTime.parse("2025-10-16T10:00:00"));
-        Post post2 = new Post(null, 2L, "3 week TIL", "my homework post2...TIL", images1, 5, LocalDateTime.parse("2025-10-15T10:00:00"));
-        Post post3 = new Post(null, 3L, "No...", "my homework post...GOOD", images2, 10, LocalDateTime.parse("2025-10-15T12:00:00"));
+    @Query("""
+            select p
+            from Post p
+            join fetch p.author
+            where p.author.id = :author_id
+            and p.deletedAt IS NULL
+            """)
+    List<Post> findPostByPostAuthor_Id(Long author_id);
 
-        save(post1);
-        save(post2);
-        save(post3);
-    }
+    // 제목에 키워드가 포함된 게시글들 검색 (대소문자 무시, 전체 결과 반환)
+    List<Post> findByTitleContainingIgnoreCase(String keyword);
 
-    public Post save(Post post){
-        sequence++;
-        if(Optional.ofNullable(post.getPost_id()).isEmpty()){
-            post.setPost_id(sequence);
-        }
-        postMap.put(post.getPost_id(), post);
-        return postMap.get(post.getPost_id());
-    }
+    // 제목에 키워드가 포함된 게시글들 검색 (대소문자 무시, 페이징/정렬 포함 + 전체 건수까지 조회)
+    Page<Post> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
 
-    public List<Post> findAllPost(){
-        List<Post> posts = new ArrayList<>();
-        for(Long post_id: postMap.keySet()){
-            Post post = postMap.get(post_id);
-            posts.add(post);
-        }
-        posts.sort(Comparator.comparing(Post::getDate).reversed());
-        return posts;
-    }
+    // 제목에 키워드가 포함된 게시글들 검색 (대소문자 무시, 페이징/정렬 포함 + 다음 페이지 존재 여부만 확인, total count 쿼리 X)
+    Slice<Post> findSliceByTitleContainingIgnoreCase(String keyword, Pageable pageable);
 
-    public Optional<List<Post>> findPostsOfPage(int page, int size){
-        List<Post> posts = new ArrayList<>(postMap.values());
+    @Modifying
+    @Query("""
+            update Post p
+            set p.title = :title,
+                p.content= :content,
+                p.postType = :postType
+            where p.id = :id
+            """)
+    void update(Long id, String title, String content, PostType postType);
 
-        // 최신순 정렬
-        posts.sort(Comparator.comparing(Post::getDate).reversed());
+    @Modifying
+    @Query("""
+            update Post p
+            set p.watch = p.watch + 1
+            where p.id = :id
+            """)
+    void readPostBySomeone(Long id);
 
-        int total = posts.size();
+    @Modifying
+    @Query("""
+            update Post p
+            set p.likeCount = p.likeCount + 1
+            where p.id = :post_id
+            """)
+    void increaseLikeCount(Long post_id);
 
-        int startIndex = (page - 1) * size; // 페이지 1 -> 인덱스 0부터 시작
-        int endIndex = startIndex + size;
+    @Modifying
+    @Query("""
+            update Post p
+            set p.likeCount = p.likeCount - 1
+            where p.id = :post_id
+            """)
+    void unlikeBySomeone(Long post_id);
 
+    @Modifying
+    @Query("""
+            update Post p
+            set p.commentCount = p.commentCount + 1
+            where p.id = :post_id
+            """)
+    void writeCommentBySomeone(Long post_id);
 
-        if (startIndex >= total) return Optional.empty();
+    @Modifying
+    @Query("""
+            update Post p
+            set p.commentCount = p.commentCount - 1
+            where p.id = :id
+            """)
+    void deleteCommentBySomeone(Post post);
 
-        if(endIndex >= total) {
-            endIndex = total;
-        }
+    @Modifying
+    @Query("""
+            update Post p
+            set p.deletedAt = CURRENT_TIMESTAMP
+            where p.id = :post_id
+            """)
+    void deletePostById(Long post_id);
 
-        return Optional.of(posts.subList(startIndex, endIndex));
-    }
-
-    public Optional<Post> findPostByPostId(Long post_id){
-        return Optional.ofNullable(postMap.get(post_id));
-    }
-
-    public List<Post> findPostByPostAuthorId(Long author_id){
-        List<Post> findPost = new ArrayList<>();
-        for(Map.Entry<Long, Post> entry : postMap.entrySet()){
-            Post post = entry.getValue();
-            if(post.getAuthor_id().equals(author_id)){
-                findPost.add(post);
-            }
-        }
-        return findPost;
-    }
-
-    public Optional<Post> update(Post post){
-        return Optional.ofNullable(postMap.put(post.getPost_id(), post));
-    }
-
-    public Post deletePostByPostId(Long post_id){
-        return postMap.remove(post_id);
-    }
 }

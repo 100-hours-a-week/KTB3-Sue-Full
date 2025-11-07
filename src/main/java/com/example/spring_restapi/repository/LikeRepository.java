@@ -1,47 +1,67 @@
 package com.example.spring_restapi.repository;
 
+import com.example.spring_restapi.dto.response.LikeResponse;
 import com.example.spring_restapi.model.Like;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class LikeRepository {
-    private final ConcurrentHashMap<Long, Like> likeMap = new ConcurrentHashMap<>();
+public interface LikeRepository extends JpaRepository<Like, Long> {
 
-    public LikeRepository(){
-        Set<Long> users1 = ConcurrentHashMap.newKeySet();
-        users1.add(1L);
-        users1.add(2L);
+    @Query("""
+            select l
+            from Like l
+            where l.post.id = :post_id
+                and l.deletedAt IS NULL
+            """)
+    Slice<Like> findLikesByPostId(Long post_id, Pageable pageable);
 
-        Set<Long> users2 = ConcurrentHashMap.newKeySet();
-        users2.add(2L);
-        users2.add(3L);
+    @Query("""
+            select l
+            from Like l
+            where l.user.id = :user_id
+                and l.deletedAt IS NULL
+            """)
+    List<Like> findLikesByUserId(Long user_id);
 
-        Like like1 = new Like(1L, users1);
-        Like like2 = new Like(2L, users1);
-        Like like3 = new Like(3L, users2);
+    @Query("""
+            select l
+            from Like l
+            where l.user.id = :user_id
+                and l.post.id = :post_id
+                and l.deletedAt IS NULL
+            """)
+    Optional<Like> findLikeOfPostByUserId(Long post_id, Long user_id);
 
-        save(like1.getPost_id(), like1);
-        save(like2.getPost_id(), like2);
-        save(like3.getPost_id(), like3);
-    }
+    @Modifying
+    @Query("""
+            update Like l
+            set l.deletedAt = CURRENT_TIMESTAMP
+            where l.id = :id
+            """)
+    void deleteLike(Long id);
 
-    public Like save(Long post_id, Like like){
-        return likeMap.put(post_id, like);
-    }
+    @Modifying
+    @Query("""
+            update Like l
+            set l.deletedAt = CURRENT_TIMESTAMP
+            where l.post.id = :post_id
+            and l.user.id = :user_id
+            """)
+    void deleteLikeOfPostByUserId(Long post_id, Long user_id);
 
-    public Optional<Like> findLikeByPostId(Long post_id){
-        return Optional.ofNullable(likeMap.get(post_id));
-    }
-
-    public Optional<Like> updateLikeByPostId(Long post_id, Like like){
-        return Optional.ofNullable(likeMap.put(post_id, like));
-    }
-
-    public Optional<Like> deleteLPostInfo(Long post_id) {
-        return Optional.ofNullable(likeMap.remove(post_id));
-    }
-
+    @Modifying
+    @Query("""
+            update Like l
+            set l.deletedAt = CURRENT_TIMESTAMP
+            where l.post.id = :post_id
+            """)
+    void deleteLikePostInfo(Long post_id);
 }

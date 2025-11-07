@@ -1,96 +1,93 @@
 package com.example.spring_restapi.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
-public class User {
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@SequenceGenerator(
+        name = "user_seq",
+        sequenceName = "user_seq",
+        allocationSize = 50
+)
+@Table(name = "user")
+public class User extends AbstractAuditable {
+
     @Schema(description = "사용자 아이디", example = "1L")
-    private Long user_id;
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    @Column(name = "user_id", nullable = false)
+    private Long id;
 
     @Schema(description = "사용자 이메일", example = "2L")
+    @Column(name = "email", nullable = false)
     private String email;
 
     @Schema(description = "사용자 비밀번호", example = "password")
+    @Column(name = "password", nullable = false, length = 50)
     private String password;
 
-    @Schema(description = "사용자 닉네임", example = "sue")
-    private String nickname;
+    @Transient
+    private String passwordConfirm;
 
-    @Schema(description = "사용자 프로필 이미지", example = "profileImage.jpg")
-    private String profileImage;
+    @Enumerated(EnumType.STRING)
+    private UserRole userRole;
 
-    @Schema(description = "사용자 소개말", example = "Hi, I'm sue")
-    private String introduce;
+    @Schema(description = "사용자 생성일자", example = "20251020T10:00:00")
+    @CreatedDate
+    @Column(name = "createdAt", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Schema(description = "사용자 토큰", example = "eJ...")
-    private String token;
+    @Schema(description = "사용자 수정일자", example = "20251020T10:00:00")
+    @LastModifiedDate
+    @Column(name = "updatedAt")
+    private LocalDateTime updatedAt;
 
-    public User(){}
+    @Schema(description = "사용자 삭제일자", example = "20251020T10:00:00")
+    @Setter
+    @Column(name = "deletedAt")
+    private LocalDateTime deletedAt;
 
-    public User(Long user_id, String email, String password, String nickname, String profileImage, String introduce, String token){
-        this.user_id = user_id;
+    protected User(){}
+
+    public User(String email, String password, String passwordConfirm, UserRole userRole){
+        if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
+        if (password == null || password.isBlank()) throw new IllegalArgumentException("password is required");
+        if (passwordConfirm == null || passwordConfirm.isBlank()) throw new IllegalArgumentException("passwordConfirm is required");
+
         this.email = email;
         this.password = password;
-        this.nickname = nickname;
-        this.profileImage = profileImage;
-        this.introduce = introduce;
-        this.token = token;
+        this.passwordConfirm = passwordConfirm;
+
+        this.createdAt = LocalDateTime.now(); // default value
+
+        if(userRole == null) this.userRole = UserRole.USER;
+        else this.userRole = userRole;
     }
 
-    // Setter
-    public void setUser_id(Long user_id){
-        this.user_id = user_id;
+    public static User create(String email, String password, String passwordConfirm, UserRole userRole) {
+        return new User(email, password, passwordConfirm, userRole);
     }
 
-    public void setEmail(String email){
+    public void changeEmail(String email) {
+        if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
         this.email = email;
     }
 
-    public void setPassword(String password){
+    public void changePassword(String password, String passwordConfirm) {
+        if (password == null || password.isBlank()) throw new IllegalArgumentException("password is required");
+        if (passwordConfirm == null || passwordConfirm.isBlank()) throw new IllegalArgumentException("password is required");
         this.password = password;
+        this.passwordConfirm = passwordConfirm;
     }
 
-    public void setNickname(String nickname){
-        this.nickname = nickname;
-    }
-
-    public void setProfileImage(String profileImage){
-        this.profileImage = profileImage;
-    }
-
-    public void setIntroduce(String introduce){
-        this.introduce = introduce;
-    }
-
-    public void setToken(String token){
-        this.token = token;
-    }
-
-    // Getter
-    public Long getUser_id(){
-        return user_id;
-    }
-
-    public String getEmail(){
-        return email;
-    }
-
-    public String getPassword(){
-        return password;
-    }
-
-    public String getNickname(){
-        return nickname;
-    }
-
-    public String getProfileImage(){
-        return profileImage;
-    }
-
-    public String getIntroduce(){
-        return introduce;
-    }
-
-    public String getToken(){
-        return token;
+    public void changeUserRole(UserRole userRole){
+        if(userRole == null) throw new IllegalArgumentException("User Role is required");
+        this.userRole = userRole;
     }
 }
