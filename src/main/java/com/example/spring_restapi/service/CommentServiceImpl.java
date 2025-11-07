@@ -7,8 +7,10 @@ import com.example.spring_restapi.dto.request.CreateCommentRequest;
 import com.example.spring_restapi.dto.request.UpdateCommentRequest;
 import com.example.spring_restapi.model.Post;
 import com.example.spring_restapi.model.User;
+import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.CommentRepository;
 import com.example.spring_restapi.repository.PostRepository;
+import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,11 +25,13 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository databaseCommentRepository;
     private final PostRepository databasePostRepository;
     private final UserRepository databaseUserRepository;
+    private final UserProfileRepository databaseUserProfileRepository;
 
-    public CommentServiceImpl(CommentRepository databaseCommentRepository, PostRepository databasePostRepository, UserRepository databaseUserRepository){
+    public CommentServiceImpl(CommentRepository databaseCommentRepository, UserProfileRepository databaseUserProfileRepository, PostRepository databasePostRepository, UserRepository databaseUserRepository){
         this.databaseCommentRepository = databaseCommentRepository;
         this.databasePostRepository = databasePostRepository;
         this.databaseUserRepository = databaseUserRepository;
+        this.databaseUserProfileRepository = databaseUserProfileRepository;
     }
 
     @Override
@@ -37,7 +41,15 @@ public class CommentServiceImpl implements CommentService {
         }
 
         List<Comment> comments = databaseCommentRepository.findCommentsByPosId(post_id);
-        List<CommentResponse> data = comments.stream().map(comment -> new CommentResponse(comment.getId(), post_id, comment.getUser().getId(), comment.getContent())).toList();
+        List<CommentResponse> data = comments.stream().map(
+                comment -> {
+                    Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(comment.getUser().getId());
+                    if(findProfile.isEmpty()){
+                        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+                    }
+
+                    return new CommentResponse(comment.getId(), post_id, comment.getUser().getId(), comment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
+                }).toList();
 
         return new CommentListResponse(post_id, data);
     }
@@ -60,7 +72,12 @@ public class CommentServiceImpl implements CommentService {
         databaseCommentRepository.save(newComment);
         databasePostRepository.writeCommentBySomeone(findPost.get());
 
-        return new CommentResponse(newComment.getId(), post_id, newComment.getUser().getId(), newComment.getContent());
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(newComment.getUser().getId());
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        return new CommentResponse(newComment.getId(), post_id, newComment.getUser().getId(), newComment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
     }
 
     @Override
@@ -94,7 +111,12 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = updateComment.get();
 
-        return new CommentResponse(comment.getId(), findPost.get().getId(), req.getUser_id(), req.getContent());
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(comment.getUser().getId());
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        return new CommentResponse(comment.getId(), findPost.get().getId(), req.getUser_id(), req.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
     }
 
     @Override
@@ -122,7 +144,13 @@ public class CommentServiceImpl implements CommentService {
         }
 
         Comment comment = deleteComment.get();
-        return new CommentResponse(comment.getId(), findPost.getId(), comment.getUser().getId(), comment.getContent());
+
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(comment.getUser().getId());
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        return new CommentResponse(comment.getId(), findPost.getId(), comment.getUser().getId(), comment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
     }
 
 }

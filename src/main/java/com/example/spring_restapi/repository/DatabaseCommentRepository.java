@@ -72,6 +72,7 @@ public class DatabaseCommentRepository implements CommentRepository{
         TypedQuery<Comment> query = em.createQuery("""
                 select c
                 from Comment c
+                join fetch c.user
                 where c.post.id = :id
                 and c.deletedAt IS NULL
                 order by c.createdAt
