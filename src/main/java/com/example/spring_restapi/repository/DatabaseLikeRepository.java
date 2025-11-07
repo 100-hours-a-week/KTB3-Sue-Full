@@ -32,6 +32,7 @@ public class DatabaseLikeRepository implements LikeRepository {
         TypedQuery<Like> query = em.createQuery("""
                 select l
                 from Like l
+                join fetch l.user
                 where l.post.id = :post_id
                 and l.deletedAt IS NULL
                 """, Like.class);

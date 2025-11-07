@@ -5,10 +5,7 @@ import com.example.spring_restapi.dto.response.PostResponse;
 import com.example.spring_restapi.model.*;
 import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
-import com.example.spring_restapi.repository.PostImagesRepository;
-import com.example.spring_restapi.repository.PostRepository;
-import com.example.spring_restapi.repository.UserProfileRepository;
-import com.example.spring_restapi.repository.UserRepository;
+import com.example.spring_restapi.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,12 +22,16 @@ public class PostServiceImpl implements PostService {
     private final PostImagesRepository databasePostImageRepository;
     private final UserRepository databaseUserRepository;
     private final UserProfileRepository databaseUserProfileRepository;
+    private final LikeRepository databaseLikeRepository;
+    private final CommentRepository databaseCommentRepository;
 
-    public PostServiceImpl(PostRepository databasePostRepository, PostImagesRepository databasePostImageRepository, UserRepository databaseUserRepository, UserProfileRepository databaseUserProfileRepository) {
+    public PostServiceImpl(PostRepository databasePostRepository, PostImagesRepository databasePostImageRepository, UserRepository databaseUserRepository, UserProfileRepository databaseUserProfileRepository, LikeRepository databaseLikeRepository, CommentRepository databaseCommentRepository) {
         this.databasePostRepository = databasePostRepository;
         this.databasePostImageRepository = databasePostImageRepository;
         this.databaseUserRepository = databaseUserRepository;
         this.databaseUserProfileRepository = databaseUserProfileRepository;
+        this.databaseLikeRepository = databaseLikeRepository;
+        this.databaseCommentRepository = databaseCommentRepository;
     }
 
     @Override
@@ -265,6 +266,9 @@ public class PostServiceImpl implements PostService {
         UserProfile profile = findProfile.get();
 
         List<PostImageResponse> postImages = databasePostImageRepository.deleteAllPostImagesByPostId(post_id).stream().map(postImage -> new PostImageResponse(post_id, postImage.getImage_url(), postImage.getIsThumbnail())).toList();
+
+        databaseLikeRepository.deleteLikePostInfo(post_id);
+        databaseCommentRepository.deleteCommentByPostId(post_id);
 
         return new PostResponse(post.getId(), profile.getNickname(), profile.getProfileImage(), post.getTitle(), post.getContent(), postImages, post.getPostType(), post.getWatch(), post.getLikeCount(), post.getCommentCount(), post.getCreatedAt(), post.getUpdatedAt());
     }

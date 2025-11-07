@@ -7,14 +7,17 @@ import com.example.spring_restapi.model.Like;
 
 import com.example.spring_restapi.model.Post;
 import com.example.spring_restapi.model.User;
+import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.LikeRepository;
 import com.example.spring_restapi.repository.PostRepository;
+import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,11 +25,13 @@ import java.util.Optional;
 public class LikeServiceImpl implements LikeService{
     private final LikeRepository databaseLikeRepository;
     private final UserRepository databaseUserRepository;
+    private final UserProfileRepository databaseUserProfileRepository;
     private final PostRepository databasePostRepository;
 
-    public LikeServiceImpl(LikeRepository databaseLikeRepository, UserRepository databaseUserRepository, PostRepository databasePostRepository){
+    public LikeServiceImpl(LikeRepository databaseLikeRepository, UserRepository databaseUserRepository, UserProfileRepository databaseUserProfileRepository, PostRepository databasePostRepository){
         this.databaseLikeRepository = databaseLikeRepository;
         this.databaseUserRepository = databaseUserRepository;
+        this.databaseUserProfileRepository = databaseUserProfileRepository;
         this.databasePostRepository = databasePostRepository;
     }
 
@@ -71,7 +76,14 @@ public class LikeServiceImpl implements LikeService{
         databaseLikeRepository.save(like);
         databasePostRepository.likeBySomeone(post_id);
 
-        return new LikeResponse(like.getId(), post_id, req.getUser_id());
+        Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByUserId(like.getUser().getId());
+        if(findUserProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile likeUserProfile = findUserProfile.get();
+
+        return new LikeResponse(like.getId(), post_id, like.getUser().getId(), likeUserProfile.getNickname(), likeUserProfile.getProfileImage());
     }
 
     @Override
@@ -104,7 +116,14 @@ public class LikeServiceImpl implements LikeService{
         databaseLikeRepository.deleteLike(unlike.getId());
         databasePostRepository.unlikeBySomeone(post_id);
 
-        return new LikeResponse(unlike.getId(), post_id, req.getUser_id());
+        Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByUserId(unlike.getUser().getId());
+        if(findUserProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile unlikeUserProfile = findUserProfile.get();
+
+        return new LikeResponse(unlike.getId(), post_id, req.getUser_id(), unlikeUserProfile.getNickname(), unlikeUserProfile.getProfileImage());
     }
 
     @Override
@@ -117,7 +136,20 @@ public class LikeServiceImpl implements LikeService{
 
         List<Like> likes = databaseLikeRepository.findLikesByPostId(post_id);
 
-        List<LikeResponse> data = likes.stream().map(like -> new LikeResponse(like.getId(), post_id, like.getUser().getId())).toList();
+        List<User> likeUser = new ArrayList<>();
+        for(Like like : likes){
+            likeUser.add(like.getUser());
+        }
+
+
+        List<LikeResponse> data = likes.stream().map(like -> {
+            Optional<UserProfile> likeProfile = databaseUserProfileRepository.findProfileByUserId(like.getUser().getId());
+            if (likeProfile.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+            }
+
+            return new LikeResponse(like.getId(), post_id, like.getUser().getId(), likeProfile.get().getNickname(), likeProfile.get().getProfileImage());
+        }).toList();
 
         return new LikeListResponse(data);
     }

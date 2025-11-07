@@ -13,6 +13,8 @@ public interface CommentRepository {
 
     Optional<Comment> deleteComment(Comment comment);
 
+    List<Comment> deleteCommentByPostId(Long post_id);
+
     Optional<Comment> findCommentByCommentId(Long comment_id);
 
     List<Comment> findCommentsByPosId(Long post_id);

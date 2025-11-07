@@ -43,6 +43,15 @@ public class DatabaseCommentRepository implements CommentRepository{
     }
 
     @Override
+    @Transactional
+    public List<Comment> deleteCommentByPostId(Long post_id){
+        List<Comment> deleteComments = findCommentsByPosId(post_id);
+        deleteComments.forEach(deleteCommnet -> deleteCommnet.setDeletedAt(LocalDateTime.now()));
+
+        return deleteComments;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Comment> findCommentByCommentId(Long comment_id){
         TypedQuery<Comment> query = em.createQuery("""
