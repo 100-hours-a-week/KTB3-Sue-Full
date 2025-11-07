@@ -9,18 +9,20 @@ import com.example.spring_restapi.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/accounts")
 public class UserController {
     private final UserService userServiceImpl;
-
-    public UserController(UserService userServiceImpl){
-        this.userServiceImpl = userServiceImpl;
-    }
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호를 이용하여 로그인")
     @ApiResponses({
@@ -162,6 +164,52 @@ public class UserController {
         UserProfileResponse data = userServiceImpl.updateUserProfileIsPrivate(user_id, req);
 
         CommonResponse<UserProfileResponse> res = CommonResponse.success("update_profile_is_private_success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    // Pageable
+    @Operation(summary = "키워드를 포함한 닉네임을 가진 유저 검색 - 리스트", description = "주어진 키워드가 포함된 닉네임의 유저 리스트 조회")
+    @ApiResponse(responseCode = "200", description = "닉네임 검색 성공")
+    @GetMapping("/search/list")
+    public ResponseEntity<CommonResponse<List<UserProfileResponse>>> searchList(@RequestParam String keyword) {
+        List<UserProfileResponse> data = userServiceImpl.searchAsList(keyword);
+
+        CommonResponse<List<UserProfileResponse>> res = CommonResponse.success("nickname search success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "키워드를 포함한 닉네임을 가진 유저 검색 - 페이징", description = "주어진 키워드가 포함된 닉네임의 유저 리스트 조회")
+    @ApiResponse(responseCode = "200", description = "닉네임 검색 성공")
+    @GetMapping("/search/page")
+    public ResponseEntity<CommonResponse<Page<UserProfileResponse>>> searchPage(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        Page<UserProfileResponse> data = userServiceImpl.searchAsPage(keyword, page, size, sortBy, direction);
+
+        CommonResponse<Page<UserProfileResponse>> res = CommonResponse.success("nickname search paging success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "키워드를 포함한 닉네임을 가진 유저 검색 - 슬라이스", description = "주어진 키워드가 포함된 닉네임의 유저 리스트 조회")
+    @ApiResponse(responseCode = "200", description = "닉네임 검색 성공")
+    @GetMapping("/search/slice")
+    public ResponseEntity<CommonResponse<Slice<UserProfileResponse>>> searchSlice(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        Slice<UserProfileResponse> data = userServiceImpl.searchAsSlice(keyword, page, size, sortBy, direction);
+
+        CommonResponse<Slice<UserProfileResponse>> res = CommonResponse.success("nickname search slice success", data);
 
         return ResponseEntity.ok(res);
     }

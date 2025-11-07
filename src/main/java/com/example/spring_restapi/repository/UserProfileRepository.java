@@ -1,6 +1,10 @@
 package com.example.spring_restapi.repository;
 
+import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.model.UserProfile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -27,6 +31,12 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, Long> 
             and p.deletedAt IS NULL
             """)
     Optional<List<UserProfile>> findProfileByNickname(String nickname);
+
+    List<UserProfile> findByNicknameContainingIgnoreCase(String keyword);
+
+    Page<UserProfile> findByNicknameContainingIgnoreCase(String keyword, Pageable pageable);
+
+    Slice<UserProfile> findSliceByNicknameContainingIgnoreCase(String keyword, Pageable pageable);
 
     @Modifying
     @Query("""

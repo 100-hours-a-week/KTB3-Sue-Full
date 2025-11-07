@@ -2,13 +2,12 @@ package com.example.spring_restapi.controller;
 
 import com.example.spring_restapi.dto.request.UserIdBodyRequest;
 import com.example.spring_restapi.dto.response.CommonResponse;
-import com.example.spring_restapi.dto.response.LikeListResponse;
 import com.example.spring_restapi.dto.response.LikeResponse;
-import com.example.spring_restapi.model.Like;
 import com.example.spring_restapi.service.LikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -75,12 +74,15 @@ public class LikeController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
     })
     @GetMapping("/list")
-    public ResponseEntity<CommonResponse<LikeListResponse>> getLikes(
-            @PathVariable Long post_id
+    public ResponseEntity<CommonResponse<Slice<LikeResponse>>> getLikes(
+            @PathVariable Long post_id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "desc") String direction
     ){
-        LikeListResponse like = likeServiceImpl.getLikes(post_id);
+        Slice<LikeResponse >like = likeServiceImpl.getLikes(post_id, page, size, direction);
 
-        CommonResponse<LikeListResponse> res = CommonResponse.success("read_like_list_success", like);
+        CommonResponse<Slice<LikeResponse>> res = CommonResponse.success("read_like_list_success", like);
         return ResponseEntity.ok(res);
     }
 }

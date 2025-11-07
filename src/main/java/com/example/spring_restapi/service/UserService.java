@@ -4,6 +4,11 @@ import com.example.spring_restapi.dto.request.*;
 import com.example.spring_restapi.dto.response.UserInfoResponse;
 import com.example.spring_restapi.dto.response.UserProfileResponse;
 import com.example.spring_restapi.dto.response.UserResponse;
+import com.example.spring_restapi.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Slice;
+
+import java.util.List;
 
 public interface UserService {
 
@@ -31,4 +36,9 @@ public interface UserService {
 
     UserResponse removeUser(Long user_id);
 
+    List<UserProfileResponse> searchAsList(String keyword);
+
+    Page<UserProfileResponse> searchAsPage(String keyword, int page, int size, String sortBy, String direction);
+
+    Slice<UserProfileResponse> searchAsSlice(String keyword, int page, int size, String sortBy, String direction);
 }

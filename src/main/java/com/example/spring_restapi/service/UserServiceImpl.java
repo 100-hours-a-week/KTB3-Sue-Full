@@ -11,11 +11,13 @@ import com.example.spring_restapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -224,6 +226,33 @@ public class UserServiceImpl implements UserService {
         UserProfile profile = findProfile.get();
 
         return new UserResponse(user.getId(), user.getEmail(), user.getUserRole(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate());
+    }
+
+    // Pageable
+    // List
+    @Override
+    public List<UserProfileResponse> searchAsList(String keyword) {
+        List<UserProfile> list = databaseUserProfileRepository.findByNicknameContainingIgnoreCase(keyword);
+        return list.stream().map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate())).toList();
+    }
+
+    // Page
+    @Override
+    public Page<UserProfileResponse> searchAsPage(String keyword, int page, int size, String sortBy, String direction) {
+        Sort sort = Sort.by("desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<UserProfile> profiles = databaseUserProfileRepository.findByNicknameContainingIgnoreCase(keyword, pageable);
+
+        return profiles.map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate()));
+    }
+
+    // Slice
+    @Override
+    public Slice<UserProfileResponse> searchAsSlice(String keyword, int page, int size, String sortBy, String direction) {
+        Sort sort = Sort.by("desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Slice<UserProfile> profiles = databaseUserProfileRepository.findSliceByNicknameContainingIgnoreCase(keyword, pageable);
+        return profiles.map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate()));
     }
 
 }

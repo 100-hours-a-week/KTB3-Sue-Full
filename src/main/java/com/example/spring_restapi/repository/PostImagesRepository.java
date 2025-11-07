@@ -51,5 +51,5 @@ public interface PostImagesRepository extends JpaRepository<PostImages, Long> {
             set i.deletedAt = CURRENT_TIMESTAMP
             where i.post.id = :post_id
             """)
-    List<PostImages> deleteAllPostImagesByPostId(Long post_id);
+    void deleteAllPostImagesByPostId(Long post_id);
 }

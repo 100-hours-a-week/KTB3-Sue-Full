@@ -1,6 +1,9 @@
 package com.example.spring_restapi.repository;
 
+import com.example.spring_restapi.dto.response.LikeResponse;
 import com.example.spring_restapi.model.Like;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +21,7 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
             where l.post.id = :post_id
                 and l.deletedAt IS NULL
             """)
-    List<Like> findLikesByPostId(Long post_id);
+    Slice<Like> findLikesByPostId(Long post_id, Pageable pageable);
 
     @Query("""
             select l
@@ -60,5 +63,5 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
             set l.deletedAt = CURRENT_TIMESTAMP
             where l.post.id = :post_id
             """)
-    List<Like> deleteLikePostInfo(Long post_id);
+    void deleteLikePostInfo(Long post_id);
 }

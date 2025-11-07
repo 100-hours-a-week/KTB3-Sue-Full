@@ -2,15 +2,14 @@ package com.example.spring_restapi.service;
 
 import com.example.spring_restapi.dto.request.CreateCommentRequest;
 import com.example.spring_restapi.dto.request.UpdateCommentRequest;
-import com.example.spring_restapi.dto.response.CommentListResponse;
 import com.example.spring_restapi.dto.response.CommentResponse;
-import com.example.spring_restapi.model.Comment;
+import org.springframework.data.domain.Slice;
 
 import java.util.List;
 
 public interface CommentService {
 
-    CommentListResponse getCommentsByPostId(Long post_id);
+    Slice<CommentResponse> getCommentsByPostId(Long post_id, int page, int size, String direction);
 
     CommentResponse writeComment(Long post_id, CreateCommentRequest req);
 

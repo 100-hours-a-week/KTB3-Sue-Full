@@ -1,6 +1,8 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.Comment;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -49,5 +51,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             from Comment c
             where c.post.id = :post_id
             """)
-    List<Comment> findCommentsByPostId(Long post_id);
+    Slice<Comment> findCommentsByPostId(Long post_id, Pageable pageable);
 }

@@ -3,6 +3,9 @@ package com.example.spring_restapi.repository;
 import com.example.spring_restapi.model.Post;
 import com.example.spring_restapi.model.PostImages;
 import com.example.spring_restapi.model.PostType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,7 +24,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             where p.deletedAt IS NULL
             order by p.createdAt
             """)
-    List<Post> findPostsOfPage(int page, int size);
+    Page<Post> findPostsOfPage(Pageable pageable);
 
     @Query("""
             select p
@@ -41,13 +44,21 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             """)
     List<Post> findPostByPostAuthor_Id(Long author_id);
 
+    // 제목에 키워드가 포함된 게시글들 검색 (대소문자 무시, 전체 결과 반환)
+    List<Post> findByTitleContainingIgnoreCase(String keyword);
+
+    // 제목에 키워드가 포함된 게시글들 검색 (대소문자 무시, 페이징/정렬 포함 + 전체 건수까지 조회)
+    Page<Post> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
+
+    // 제목에 키워드가 포함된 게시글들 검색 (대소문자 무시, 페이징/정렬 포함 + 다음 페이지 존재 여부만 확인, total count 쿼리 X)
+    Slice<Post> findSliceByTitleContainingIgnoreCase(String keyword, Pageable pageable);
+
     @Modifying
     @Query("""
             update Post p
             set p.title = :title,
                 p.content= :content,
-                p.postType = :postType,
-                p.updatedAt = CURRENT_TIMESTAMP
+                p.postType = :postType
             where p.id = :id
             """)
     void update(Long id, String title, String content, PostType postType);
@@ -96,7 +107,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("""
             update Post p
             set p.deletedAt = CURRENT_TIMESTAMP
-            where p.id = :id
+            where p.id = :post_id
             """)
     void deletePostById(Long post_id);
 

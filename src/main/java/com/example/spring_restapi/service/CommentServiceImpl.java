@@ -1,6 +1,5 @@
 package com.example.spring_restapi.service;
 
-import com.example.spring_restapi.dto.response.CommentListResponse;
 import com.example.spring_restapi.dto.response.CommentResponse;
 import com.example.spring_restapi.model.Comment;
 import com.example.spring_restapi.dto.request.CreateCommentRequest;
@@ -13,13 +12,15 @@ import com.example.spring_restapi.repository.PostRepository;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,13 +33,15 @@ public class CommentServiceImpl implements CommentService {
     private final UserProfileRepository databaseUserProfileRepository;
 
     @Override
-    public CommentListResponse getCommentsByPostId(Long post_id){
+    public Slice<CommentResponse> getCommentsByPostId(Long post_id, int page, int size, String direction){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
         if(databasePostRepository.findPostById(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        List<Comment> comments = databaseCommentRepository.findCommentsByPostId(post_id);
-        List<CommentResponse> data = comments.stream().map(
+        Slice<Comment> comments = databaseCommentRepository.findCommentsByPostId(post_id, pageable);
+        return comments.map(
                 comment -> {
                     Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(comment.getUser().getId());
                     if(findProfile.isEmpty()){
@@ -46,9 +49,7 @@ public class CommentServiceImpl implements CommentService {
                     }
 
                     return new CommentResponse(comment.getId(), post_id, comment.getUser().getId(), comment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
-                }).toList();
-
-        return new CommentListResponse(post_id, data);
+                });
     }
 
     @Override

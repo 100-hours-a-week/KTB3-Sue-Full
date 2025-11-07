@@ -1,8 +1,6 @@
 package com.example.spring_restapi.controller;
 
-import com.example.spring_restapi.dto.response.CommentListResponse;
 import com.example.spring_restapi.dto.response.CommentResponse;
-import com.example.spring_restapi.model.Comment;
 import com.example.spring_restapi.dto.request.CreateCommentRequest;
 import com.example.spring_restapi.dto.request.UpdateCommentRequest;
 import com.example.spring_restapi.dto.request.UserIdBodyRequest;
@@ -11,10 +9,9 @@ import com.example.spring_restapi.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/posts/{post_id}/comments")
@@ -31,10 +28,15 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
     })
     @GetMapping
-    public ResponseEntity<CommonResponse<CommentListResponse>> readCommentsByPostId(@PathVariable Long post_id){
-        CommentListResponse data = commentServiceImpl.getCommentsByPostId(post_id);
+    public ResponseEntity<CommonResponse<Slice<CommentResponse>>> readCommentsByPostId(
+            @PathVariable Long post_id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "desc") String direction
+    ){
+        Slice<CommentResponse> data = commentServiceImpl.getCommentsByPostId(post_id, page, size, direction);
 
-        CommonResponse<CommentListResponse> res = CommonResponse.success("read_comments_success", data);
+        CommonResponse<Slice<CommentResponse>> res = CommonResponse.success("read_comments_success", data);
 
         return ResponseEntity.ok(res);
     }

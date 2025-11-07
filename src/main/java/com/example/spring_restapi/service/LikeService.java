@@ -3,7 +3,7 @@ package com.example.spring_restapi.service;
 import com.example.spring_restapi.dto.request.UserIdBodyRequest;
 import com.example.spring_restapi.dto.response.LikeListResponse;
 import com.example.spring_restapi.dto.response.LikeResponse;
-import com.example.spring_restapi.model.Like;
+import org.springframework.data.domain.Slice;
 
 
 public interface LikeService {
@@ -16,5 +16,5 @@ public interface LikeService {
 
     LikeResponse unlike(Long post_id, UserIdBodyRequest req);
 
-    LikeListResponse getLikes(Long post_id);
+    Slice<LikeResponse> getLikes(Long post_id, int page, int size, String direction);
 }

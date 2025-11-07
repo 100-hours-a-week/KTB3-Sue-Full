@@ -13,12 +13,15 @@ import com.example.spring_restapi.repository.PostRepository;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -122,29 +125,42 @@ public class LikeServiceImpl implements LikeService{
 
     @Override
     @Transactional
-    public LikeListResponse getLikes(Long post_id){
+    public Slice<LikeResponse> getLikes(Long post_id, int page, int size, String direction){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
         if(databasePostRepository.findPostById(post_id).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        List<Like> likes = databaseLikeRepository.findLikesByPostId(post_id);
-
-        List<User> likeUser = new ArrayList<>();
-        for(Like like : likes){
-            likeUser.add(like.getUser());
-        }
+        Slice<Like> likes = databaseLikeRepository.findLikesByPostId(post_id, pageable);
 
 
-        List<LikeResponse> data = likes.stream().map(like -> {
+        return likes.map(like -> {
             Optional<UserProfile> likeProfile = databaseUserProfileRepository.findProfileByUserId(like.getUser().getId());
             if (likeProfile.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
             }
 
             return new LikeResponse(like.getId(), post_id, like.getUser().getId(), likeProfile.get().getNickname(), likeProfile.get().getProfileImage());
-        }).toList();
-
-        return new LikeListResponse(data);
+        });
     }
+
+//    // Slice
+//    public Slice<LikeResponse> findLikesByPostIdAsSlice(int page, int size, String sortBy) {
+//        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+//        Slice<Like> likes = databaseLikeRepository.findLikesByPostIdAsSlice(pageable);
+//
+//        return likes.map(
+//                like -> {
+//                    Optional<UserProfile> likeProfile = databaseUserProfileRepository.findProfileByUserId(like.getUser().getId());
+//                    if(likeProfile.isEmpty()){
+//                        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+//                    }
+//
+//                    UserProfile profile = likeProfile.get();
+//
+//                    return new LikeResponse(like.getId(), like.getPost().getId(), like.getUser().getId(), profile.getNickname(), profile.getProfileImage());
+//                }
+//        );
+//    }
 }

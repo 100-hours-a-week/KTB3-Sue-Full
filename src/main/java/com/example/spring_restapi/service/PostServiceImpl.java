@@ -7,12 +7,12 @@ import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
 import com.example.spring_restapi.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -93,24 +93,31 @@ public class PostServiceImpl implements PostService {
         }
 
         Post post = findPost.get();
-        User author = post.getAuthor();
 
         databasePostRepository.readPostBySomeone(post.getId());
 
-        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(author.getId());
+        User author = post.getAuthor();
 
-        if (findProfile.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        String nickname = "(탈퇴한 사용자)";
+        String profileImage = null;
+
+        if (author != null && author.getDeletedAt() == null) {
+            Optional<UserProfile> findProfile =
+                    databaseUserProfileRepository.findProfileByUserId(author.getId());
+
+            if (findProfile.isPresent()) {
+                UserProfile profile = findProfile.get();
+                nickname = profile.getNickname();
+                profileImage = profile.getProfileImage();
+            }
         }
-
-        UserProfile profile = findProfile.get();
 
         List<PostImageResponse> postImages = databasePostImageRepository.findPostImagesByPostId(post_id).stream().map(image -> new PostImageResponse(post_id, image.getImage_url(), image.getIsThumbnail())).collect(Collectors.toList());
 
         return new PostResponse(
                 post.getId(),
-                profile.getNickname(),
-                profile.getProfileImage(),
+                nickname,
+                profileImage,
                 post.getTitle(),
                 post.getContent(),
                 postImages,
@@ -137,7 +144,7 @@ public class PostServiceImpl implements PostService {
         UserProfile profile = authorProfile.get();
 
         return posts.stream().map(post -> {
-            List<PostImageResponse> images = post.getImages().stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
+            List<PostImageResponse> images = post.getImages().stream().filter(image -> image.getDeletedAt() == null).map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
 
                     return new PostResponse(
                             post.getId(),
@@ -158,23 +165,36 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public List<PostResponse> getPostsOfPage(int page, int size){
-        if(page == 0 || size > 10){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-        }
+    public Page<PostResponse> getPostsOfPage(int page, int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        List<Post> findPost = databasePostRepository.findPostsOfPage(page, size);
+        Page<Post> findPost = databasePostRepository.findPostsOfPage(pageable);
         // 권한 확인 로직 추가 예
 
-        return findPost.stream().map(post -> {
-            UserProfile profile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
 
-            List<PostImageResponse> images = post.getImages().stream().map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
+        return findPost.map(post -> {
+
+            User author = post.getAuthor();
+
+            String nickname = "(탈퇴한 사용자)";
+            String profileImage = null;
+
+            if (author != null && author.getDeletedAt() == null) {
+                Optional<UserProfile> findProfile =
+                        databaseUserProfileRepository.findProfileByUserId(author.getId());
+
+                if (findProfile.isPresent()) {
+                    UserProfile profile = findProfile.get();
+                    nickname = profile.getNickname();
+                    profileImage = profile.getProfileImage();
+                }
+            }
+            List<PostImageResponse> images = post.getImages().stream().filter(image -> image.getDeletedAt() == null).map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
 
             return new PostResponse(
                     post.getId(),
-                    profile.getNickname(),
-                    profile.getProfileImage(),
+                    nickname,
+                    profileImage,
                     post.getTitle(),
                     post.getContent(),
                     images,
@@ -185,7 +205,7 @@ public class PostServiceImpl implements PostService {
                     post.getCreatedAt(),
                     post.getUpdatedAt()
             );
-        }).collect(Collectors.toList());
+        });
     }
 
     @Override
@@ -233,7 +253,7 @@ public class PostServiceImpl implements PostService {
             }
         }
 
-        List<PostImageResponse> images = data.getImages().stream().map(image -> new PostImageResponse(data.getId(), image.getImage_url(),image.getIsThumbnail())).collect(Collectors.toList());
+        List<PostImageResponse> images = data.getImages().stream().filter(image -> image.getDeletedAt() == null).map(image -> new PostImageResponse(data.getId(), image.getImage_url(),image.getIsThumbnail())).collect(Collectors.toList());
 
         return new PostResponse(data.getId(), profile.getNickname(), profile.getProfileImage(), data.getTitle(), data.getContent(), images, data.getPostType(), data.getWatch(), data.getLikeCount(), data.getCommentCount(), data.getCreatedAt(), data.getUpdatedAt());
     }
@@ -262,12 +282,70 @@ public class PostServiceImpl implements PostService {
 
         UserProfile profile = findProfile.get();
 
-        List<PostImageResponse> postImages = databasePostImageRepository.deleteAllPostImagesByPostId(post_id).stream().map(postImage -> new PostImageResponse(post_id, postImage.getImage_url(), postImage.getIsThumbnail())).toList();
+        databasePostImageRepository.deleteAllPostImagesByPostId(post_id);
+
+        List<PostImageResponse> postImages = post.getImages().stream().map(postImage -> new PostImageResponse(post_id, postImage.getImage_url(), postImage.getIsThumbnail())).toList();;
 
         databaseLikeRepository.deleteLikePostInfo(post_id);
         databaseCommentRepository.deleteCommentByPostId(post_id);
 
         return new PostResponse(post.getId(), profile.getNickname(), profile.getProfileImage(), post.getTitle(), post.getContent(), postImages, post.getPostType(), post.getWatch(), post.getLikeCount(), post.getCommentCount(), post.getCreatedAt(), post.getUpdatedAt());
+    }
+
+    // pageable
+    // List
+    public List<PostResponse> searchAsList(String keyword) {
+        List<Post> posts = databasePostRepository.findByTitleContainingIgnoreCase(keyword);
+        return posts.stream().map(post ->{
+            Optional<UserProfile> profile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId());
+            if(profile.isEmpty()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+            }
+
+            UserProfile authorProfile = profile.get();
+            List<PostImageResponse> images = post.getImages().stream().filter(image -> image.getDeletedAt() == null).map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
+
+            return new PostResponse(post.getId(), authorProfile.getNickname(), authorProfile.getProfileImage(), post.getTitle(), post.getContent(), images, post.getPostType(), post.getWatch(), post.getLikeCount(), post.getCommentCount(), post.getCreatedAt(), post.getUpdatedAt());
+        }).toList();
+    }
+
+    // Page
+    public Page<PostResponse> searchAsPage(String keyword, int page, int size, String sortBy, String direction) {
+        Sort sort = Sort.by("desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Post> posts = databasePostRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+
+        return posts.map(
+                post -> {
+                    Optional<UserProfile> profile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId());
+                    if(profile.isEmpty()){
+                        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+                    }
+
+                    UserProfile authorProfile = profile.get();
+                    List<PostImageResponse> images = post.getImages().stream().filter(image -> image.getDeletedAt() == null).map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
+
+                    return new PostResponse(post.getId(), authorProfile.getNickname(), authorProfile.getProfileImage(), post.getTitle(), post.getContent(), images, post.getPostType(), post.getWatch(), post.getLikeCount(), post.getCommentCount(), post.getCreatedAt(), post.getUpdatedAt());
+                });
+    }
+
+    // Slice
+    public Slice<PostResponse> searchAsSlice(String keyword, int page, int size, String sortBy, String direction) {
+        Sort sort = Sort.by("desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Slice<Post> posts = databasePostRepository.findSliceByTitleContainingIgnoreCase(keyword, pageable);
+
+        return posts.map(post -> {
+            Optional<UserProfile> profile = databaseUserProfileRepository.findProfileByUserId(post.getAuthor().getId());
+            if(profile.isEmpty()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+            }
+
+            UserProfile authorProfile = profile.get();
+            List<PostImageResponse> images = post.getImages().stream().filter(image -> image.getDeletedAt() == null).map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
+
+            return new PostResponse(post.getId(), authorProfile.getNickname(), authorProfile.getProfileImage(), post.getTitle(), post.getContent(), images, post.getPostType(), post.getWatch(), post.getLikeCount(), post.getCommentCount(), post.getCreatedAt(), post.getUpdatedAt());
+        });
     }
 
 }
