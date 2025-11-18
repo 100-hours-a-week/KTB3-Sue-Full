@@ -5,6 +5,11 @@ spring:
     password: dana938524
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   jpa:
     hibernate:
       ddl-auto: update   # 개발 중에는 create / create-drop / update 중 선택

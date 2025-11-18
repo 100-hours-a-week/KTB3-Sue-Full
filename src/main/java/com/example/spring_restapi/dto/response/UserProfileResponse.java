@@ -2,6 +2,7 @@ package com.example.spring_restapi.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
 public class UserProfileResponse {
@@ -12,7 +13,7 @@ public class UserProfileResponse {
     private String nickname;
 
     @Schema(description = "유저 프로필 응답 - 유저 프로필 이미지", example = "image.jpg")
-    private String profile_image;
+    private String profileImage;
 
     @Schema(description = "유저 프로필 응답 - 유저 프로필 소개", example = "hello world")
     private String introduce;
@@ -23,10 +24,10 @@ public class UserProfileResponse {
     @Schema(description = "유저 프로필 응답 - 유저 프로필 비공개 여부", example = "false")
     private Boolean isPrivate;
 
-    public UserProfileResponse(Long user_profile_id, String nickname, String profile_image, String introduce, String gender, Boolean isPrivate){
+    public UserProfileResponse(Long user_profile_id, String nickname, String profileImage, String introduce, String gender, Boolean isPrivate){
         this.user_profile_id = user_profile_id;
         this.nickname = nickname;
-        this.profile_image = profile_image;
+        this.profileImage = profileImage;
         this.introduce = introduce;
         this.gender = gender;
         this.isPrivate = isPrivate;

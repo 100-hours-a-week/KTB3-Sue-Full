@@ -28,11 +28,17 @@ public class UpdateUserPasswordImpl implements UpdateUserService<UserInfoRespons
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        User updateUser = findUser.get();
-
-        if(!updateUser.getPassword().equals(req.getCurrentPassword())){
+        System.out.println(req.getNewPassword());
+        System.out.println(req.getNewPasswordConfirm());
+        if(!req.getNewPassword().equals(req.getNewPasswordConfirm())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
+
+        User updateUser = findUser.get();
+
+//        if(!updateUser.getPassword().equals(req.getCurrentPassword())){
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
+//        }
 
         updateUser.changePassword(req.getNewPassword(), req.getNewPasswordConfirm());
 

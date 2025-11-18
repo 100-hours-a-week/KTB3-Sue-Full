@@ -15,7 +15,9 @@ import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -46,12 +48,14 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "이메일 또는 비밀번호 값을 입력하지 않음")
     })
     @PostMapping("/user")
-    public ResponseEntity<CommonResponse<UserResponse>> signup(@RequestBody SignUpRequest req){
+    public ResponseEntity<CommonResponse<UserResponse>> signup(@ModelAttribute SignUpRequest req) throws IOException {
+        System.out.println(req);
         UserResponse data = userServiceImpl.signup(req);
 
         CommonResponse<UserResponse> res = CommonResponse.success("signup_success", data);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
+
 
     @Operation(summary = "유저 정보 변경", description = "시스템에 등록된 유저의 정보를 변경")
     @ApiResponses({
@@ -214,4 +218,43 @@ public class UserController {
         return ResponseEntity.ok(res);
     }
 
+    @Operation(summary = "이메일 중복 체크", description = "주어진 이메일이 이미 존재하는 이메일인지 확인")
+    @ApiResponse(responseCode = "200", description = "이메일 중복 체크 성공")
+    @PostMapping("/email")
+    public ResponseEntity<CommonResponse<Boolean>> checkEmailConflict(
+            @RequestBody EmailCheckRequest req
+    ){
+        Boolean data = userServiceImpl.checkEmailConflict(req);
+
+        CommonResponse<Boolean> res = CommonResponse.success("check email conflict success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "닉네임 중복 체크", description = "주어진 닉네임이 이미 존재하는 닉네임인지 확인")
+    @ApiResponse(responseCode = "200", description = "닉네임 중복 체크 성공")
+    @PostMapping("/nickname")
+    public ResponseEntity<CommonResponse<Boolean>> checkNicknameConflict(
+            @RequestBody NicknameCheckRequest req
+    ){
+        Boolean data = userServiceImpl.checkNicknameConflict(req);
+
+        CommonResponse<Boolean> res = CommonResponse.success("check nickname conflict success", data);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "회원 정보 수정", description = "회원 정보 - 닉네임, 프로필 이미지 수정")
+    @ApiResponse(responseCode = "200", description = "회원 정보 수정 성")
+    @PutMapping("/userinfo")
+    public ResponseEntity<CommonResponse<UserProfileResponse>> updateUserNicknameAndProfileImage(
+            @ModelAttribute UpdateUserNicknameProfileImageReqeust req
+    ) throws IOException {
+        UserProfileResponse data = userServiceImpl.updateUserNicknameAndProfileImage(req);
+
+        CommonResponse<UserProfileResponse> res = CommonResponse.success("update nickname and profileimage success", data);
+
+        return ResponseEntity.ok(res);
+
+    }
 }

@@ -30,8 +30,7 @@ public class UserProfile extends AbstractAuditable {
     private User user;
 
     @Schema(description = "사용자 닉네임", example = "sue")
-
-    @Column(name = "nickname", length = 20)
+    @Column(name = "nickname", length = 50, unique = true)
     private String nickname;
 
     @Schema(description = "사용자 프로필 이미지", example = "profileImage.jpg")
@@ -69,7 +68,7 @@ public class UserProfile extends AbstractAuditable {
     protected UserProfile() {}
 
     public UserProfile(String nickname, String profileImage, String introduce, String gender){
-        if (gender == null || gender.isBlank()) throw new IllegalArgumentException("gender is required");
+//        if (gender == null || gender.isBlank()) throw new IllegalArgumentException("gender is required");
 
         this.nickname = nickname;
         this.profileImage = profileImage;

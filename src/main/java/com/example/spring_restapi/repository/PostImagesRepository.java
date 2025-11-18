@@ -23,6 +23,14 @@ public interface PostImagesRepository extends JpaRepository<PostImages, Long> {
     @Query("""
             select i
             from PostImages i
+            where i.image_url = :image_url
+            and i.deletedAt IS NULL
+            """)
+    Optional<PostImages> findPostImageByUrl(String image_url);
+
+    @Query("""
+            select i
+            from PostImages i
             where i.isThumbnail = TRUE
             and i.deletedAt IS NULL
             """)
@@ -43,7 +51,7 @@ public interface PostImagesRepository extends JpaRepository<PostImages, Long> {
             set i.deletedAt = CURRENT_TIMESTAMP
             where i.id = :id
             """)
-    PostImages deletePostImagesById(Long id);
+    void deletePostImagesById(Long id);
 
     @Modifying
     @Query("""

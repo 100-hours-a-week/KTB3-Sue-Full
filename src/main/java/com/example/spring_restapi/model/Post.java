@@ -38,7 +38,7 @@ public class Post extends AbstractAuditable {
     private String title;
 
     @Schema(description = "게시글 내용", example = "오늘은 Swagger에 대해 배웠다...")
-    @Column(name = "content", length = 1000)
+    @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
 
     @Schema(description = "게시글 이미지", example = "[image1.jpg, image2.jpg, ...]")

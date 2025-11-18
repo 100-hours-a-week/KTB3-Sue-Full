@@ -4,6 +4,7 @@ import com.example.spring_restapi.model.PostImages;
 import com.example.spring_restapi.model.PostType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,8 +19,11 @@ public class UpdatePostRequest {
     @Schema(description = "게시물 수정 - 내용", example = "update... Today I learned...")
     private String content;
 
-    @Schema(description = "게시글 수정 - 이미지", example = "[1.png, 2,.jpg, ...]")
-    private List<String> images;
+    @Schema(description = "게시글 수정 - 현재 이미지", example = "[1.png, 2,.jpg, ...]")
+    private List<String> currentImages;
+
+    @Schema(description = "게시글 수정 - 새 이미지", example = "[3.png, 4.jpg, ...]")
+    private List<MultipartFile> newImages;
 
     @Schema(description = "게시물 수정 - 게시글 카테고리", example = "NOTICE/FREE")
     private PostType postType;

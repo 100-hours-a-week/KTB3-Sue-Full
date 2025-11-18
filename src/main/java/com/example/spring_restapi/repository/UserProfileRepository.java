@@ -30,7 +30,7 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, Long> 
             where p.nickname =:nickname
             and p.deletedAt IS NULL
             """)
-    Optional<List<UserProfile>> findProfileByNickname(String nickname);
+    Optional<UserProfile> findProfileByNickname(String nickname);
 
     List<UserProfile> findByNicknameContainingIgnoreCase(String keyword);
 
@@ -65,6 +65,15 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, Long> 
             where p.user.id = :user_id
             """)
     void updateProfileImage(Long user_id, String profileImage);
+
+    @Modifying
+    @Query("""
+            update UserProfile p
+            set p.nickname = :nickname,
+                p.profileImage = :profileImage
+            where p.user.id = :user_id
+            """)
+    void updateNicknameAndProfileImage(Long user_id, String nickname, String profileImage);
 
     @Modifying
     @Query("""

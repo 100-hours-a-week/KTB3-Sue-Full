@@ -9,16 +9,20 @@ import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.sql.Update;
-import org.springframework.beans.factory.annotation.Qualifier;
+
+import org.hibernate.internal.log.SubSystemLogging;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -70,12 +74,13 @@ public class UserServiceImpl implements UserService {
                 loginUserProfile.getProfileImage(),
                 loginUserProfile.getIntroduce(),
                 loginUserProfile.getGender(),
-                loginUserProfile.getIsPrivate()) ;
+                loginUserProfile.getIsPrivate()
+        );
     }
 
     @Override
     @Transactional
-    public UserResponse signup(SignUpRequest req){
+    public UserResponse signup(SignUpRequest req) throws IOException {
         if(req.getEmail().isEmpty() || req.getPassword().isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
@@ -86,9 +91,24 @@ public class UserServiceImpl implements UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already_exists");
         }
 
+        MultipartFile profileImage = req.getProfileImage();
+        String fileName = profileImage.getOriginalFilename();
+        UUID uuid = UUID.randomUUID();
+        String extension = null;
+
+        if (fileName != null) {
+            extension = fileName.substring(fileName.lastIndexOf("."));
+        }
+
+        String newFileName = uuid + extension;
+
+        String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + newFileName;
+
+        profileImage.transferTo(new File(filePath));
+
         User newUser = User.create(req.getEmail(), req.getPassword(), req.getPasswordConfirm(), req.getUserRole());
 
-        UserProfile newUserProfile = UserProfile.create(req.getNickname(), req.getProfileImage(), req.getIntroduce(), req.getGender());
+        UserProfile newUserProfile = UserProfile.create(req.getNickname(), newFileName, req.getIntroduce(), req.getGender());
 
         User user = databaseUserRepository.save(newUser);
 
@@ -210,12 +230,89 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public UserProfileResponse updateUserNicknameAndProfileImage(UpdateUserNicknameProfileImageReqeust req) throws IOException {
+        Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByUserId(req.getUser_id());
+
+        if(findUserProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        UserProfile userProfile = findUserProfile.get();
+
+        if(!req.getNewProfileImage().isEmpty() && req.getNewProfileImage() != null){
+            // profile image processing
+            String currentProfileImage = req.getCurrentProfileImage();
+
+            System.out.println("current " + req.getCurrentProfileImage());
+
+            File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + currentProfileImage);
+            if (target.exists()) {
+                boolean deleted = target.delete();
+                if (!deleted) {
+                    System.out.println("삭제 실패");
+                    throw new RuntimeException("파일 삭제 실패: " + currentProfileImage);
+                }
+            }
+
+            System.out.println("원래 이미지 삭제 완료");
+
+            MultipartFile profileImage = req.getNewProfileImage();
+            String fileName = profileImage.getOriginalFilename();
+            UUID uuid = UUID.randomUUID();
+            String extension = null;
+
+            if (fileName != null) {
+                extension = fileName.substring(fileName.lastIndexOf("."));
+            }
+
+            String newFileName = uuid + extension;
+            System.out.println("new " + newFileName);
+
+            String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + newFileName;
+
+            profileImage.transferTo(new File(filePath));
+
+            userProfile.changeProfileImage(newFileName);
+        }
+
+        System.out.println(req.getNewNickname());
+        if(!req.getNewNickname().isEmpty()){
+            userProfile.changeNickname(req.getNewNickname());
+        }
+
+        databaseUserProfileRepository.updateNicknameAndProfileImage(req.getUser_id(), userProfile.getNickname(), userProfile.getProfileImage());
+
+        return new UserProfileResponse(
+                userProfile.getId(),
+                userProfile.getNickname(),
+                userProfile.getProfileImage(),
+                userProfile.getIntroduce(),
+                userProfile.getGender(),
+                userProfile.getIsPrivate()
+        );
+    }
+
+    @Override
+    @Transactional
     public UserResponse removeUser(Long user_id){
         Optional<User> findUser = databaseUserRepository.findUserById(user_id);
         Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(user_id);
 
         if(findUser.isEmpty() || findProfile.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
+        }
+
+        // 프로필 이미지 로컬 스토리지에서 지우기
+
+        if(!findProfile.get().getProfileImage().isEmpty()){
+            File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + findProfile.get().getProfileImage());
+            if (target.exists()) {
+                boolean deleted = target.delete();
+                if (!deleted) {
+                    System.out.println("삭제 실패");
+                    throw new RuntimeException("파일 삭제 실패: " + findProfile.get().getProfileImage());
+                }
+            }
         }
 
         databaseUserRepository.deleteUserById(user_id);
@@ -258,4 +355,26 @@ public class UserServiceImpl implements UserService {
         return profiles.map(profile -> new UserProfileResponse(profile.getId(), profile.getNickname(), profile.getProfileImage(), profile.getIntroduce(), profile.getGender(), profile.getIsPrivate()));
     }
 
+    @Override
+    public Boolean checkEmailConflict(EmailCheckRequest req) {
+        if (req.getEmail().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
+        }
+        Optional<User> findUser = databaseUserRepository.findUserByEmail(req.getEmail());
+        findUser.ifPresent(user -> System.out.println(user.getEmail()));
+
+        return findUser.isPresent();
+    }
+
+    @Override
+    public Boolean checkNicknameConflict(NicknameCheckRequest req) {
+        if (req.getNickname().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
+        }
+
+        Optional<UserProfile> findUserProfile = databaseUserProfileRepository.findProfileByNickname(req.getNickname());
+        findUserProfile.ifPresent(user -> System.out.println(findUserProfile.get().getNickname()));
+
+        return findUserProfile.isPresent();
+    }
 }

@@ -3,7 +3,12 @@ package com.example.spring_restapi.dto.request;
 import com.example.spring_restapi.model.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
+@Setter
+@NoArgsConstructor
 @Getter
 public class SignUpRequest {
     @Schema(description = "회원가입 요청 - 이메일", example = "email@email.com")
@@ -22,7 +27,7 @@ public class SignUpRequest {
     private String nickname;
 
     @Schema(description = "회원가입 요청 - 프로필 이미지", example = "profile.jpg")
-    private String profileImage;
+    private MultipartFile profileImage;
 
     @Schema(description = "회원가입 요청 - 소개", example = "singup!")
     private String introduce;

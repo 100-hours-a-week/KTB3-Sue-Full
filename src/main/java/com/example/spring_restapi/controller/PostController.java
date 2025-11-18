@@ -15,6 +15,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -59,7 +60,7 @@ public class PostController {
             @ApiResponse(responseCode = "201", description = "게시물 작성 성공")
     })
     @PostMapping
-    public ResponseEntity<CommonResponse<PostResponse>> writePost(@RequestBody CreatePostRequest req){
+    public ResponseEntity<CommonResponse<PostResponse>> writePost(@ModelAttribute CreatePostRequest req) throws IOException {
         PostResponse data = postServiceImpl.write(req);
 
         CommonResponse<PostResponse> res = CommonResponse.success("write_post_success", data);
@@ -73,7 +74,7 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물을 수정하려 함")
     })
     @PatchMapping("/{post_id}")
-    public ResponseEntity<CommonResponse<PostResponse>> updatePost(@PathVariable Long post_id, @RequestBody UpdatePostRequest req){
+    public ResponseEntity<CommonResponse<PostResponse>> updatePost(@PathVariable Long post_id, @ModelAttribute UpdatePostRequest req) throws IOException {
         PostResponse data = postServiceImpl.updatePost(post_id, req);
 
         CommonResponse<PostResponse> res = CommonResponse.success("update_post_success", data);

@@ -7,11 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface PostService {
 
-    PostResponse write(CreatePostRequest req);
+    PostResponse write(CreatePostRequest req) throws IOException;
 
     PostResponse getPostByPostId(Long post_id);
 
@@ -19,7 +20,7 @@ public interface PostService {
 
     Page<PostResponse> getPostsOfPage(int page, int size);
 
-    PostResponse updatePost(Long post_id, UpdatePostRequest req);
+    PostResponse updatePost(Long post_id, UpdatePostRequest req) throws IOException;
 
     PostResponse deletePost(Long post_id, Long user_id);
 
