@@ -19,7 +19,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("upload/profileImage/**")
+        registry.addResourceHandler("/upload/profileImage/**")
                 .addResourceLocations("file:/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/");
+
+        registry.addResourceHandler("/upload/postImage/**")
+                .addResourceLocations("file:/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/");
+
     }
 }

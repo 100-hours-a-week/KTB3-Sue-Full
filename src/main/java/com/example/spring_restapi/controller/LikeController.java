@@ -85,4 +85,19 @@ public class LikeController {
         CommonResponse<Slice<LikeResponse>> res = CommonResponse.success("read_like_list_success", like);
         return ResponseEntity.ok(res);
     }
+
+    @Operation(summary = "좋아요 여부 체크", description = "유저의 게시물 좋아요 어부를 확인")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "좋아요 여부 체크 성공")
+    })
+    @GetMapping("/check")
+    public ResponseEntity<CommonResponse<Boolean>> checkLikeByUser(
+            @PathVariable Long post_id,
+            @RequestParam Long user_id
+    ){
+        Boolean data = likeServiceImpl.checkLikedByUser(post_id, user_id);
+
+        CommonResponse<Boolean> res = CommonResponse.success("check_like_success", data);
+        return ResponseEntity.ok(res);
+    }
 }

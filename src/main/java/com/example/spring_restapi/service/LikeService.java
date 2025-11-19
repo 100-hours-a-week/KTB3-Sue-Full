@@ -17,4 +17,6 @@ public interface LikeService {
     LikeResponse unlike(Long post_id, UserIdBodyRequest req);
 
     Slice<LikeResponse> getLikes(Long post_id, int page, int size, String direction);
+
+    Boolean checkLikedByUser(Long post_id, Long user_id);
 }

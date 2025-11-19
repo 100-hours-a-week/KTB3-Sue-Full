@@ -1,5 +1,6 @@
 package com.example.spring_restapi.service;
 
+import com.example.spring_restapi.dto.request.CheckLikedByUserRequest;
 import com.example.spring_restapi.dto.request.UserIdBodyRequest;
 import com.example.spring_restapi.dto.response.LikeListResponse;
 import com.example.spring_restapi.dto.response.LikeResponse;
@@ -143,6 +144,14 @@ public class LikeServiceImpl implements LikeService{
 
             return new LikeResponse(like.getId(), post_id, like.getUser().getId(), likeProfile.get().getNickname(), likeProfile.get().getProfileImage());
         });
+    }
+
+
+    @Override
+    public Boolean checkLikedByUser(Long post_id, Long user_id){
+        Optional<Like> findLike = databaseLikeRepository.findLikeOfPostByUserId(post_id, user_id);
+
+        return findLike.isPresent();
     }
 
 //    // Slice

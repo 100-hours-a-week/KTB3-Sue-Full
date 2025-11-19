@@ -51,47 +51,54 @@ public class PostServiceImpl implements PostService {
 
         UserProfile profile = findProfile.get();
 
-        List<MultipartFile> imageFiles = req.getImages();
-        List<String> fileNames = imageFiles.stream().map(MultipartFile::getOriginalFilename).toList();
-
-
-        for(MultipartFile imageFile : imageFiles){
-            String fileOriginName = imageFile.getOriginalFilename();
-
-            UUID uuid = UUID.randomUUID();
-            String extension = null;
-
-            if(fileOriginName != null){
-                extension = fileOriginName.substring(fileOriginName.lastIndexOf("."));
-            }
-
-            String newFileName = uuid + extension;
-
-            String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + newFileName;
-
-            imageFile.transferTo(new File(filePath));
-        }
-
         Post newPost = new Post(req.getTitle(), req.getContent(), req.getPostType(), user);
 
-        // 로그인된 유저인지 토큰 확인 로직 추가 예정
+        List<PostImageResponse> postImages = new ArrayList<>();
 
-        if (!req.getImages().isEmpty()) {
-            List<PostImages> images = fileNames.stream().map(file -> PostImages.create(newPost, file, false)).toList();
+        if (req.getImages() != null && !req.getImages().isEmpty()) {
+            List<MultipartFile> imageFiles = req.getImages();
+            List<String> fileNames = imageFiles.stream().map(MultipartFile::getOriginalFilename).toList();
+
+
+            List<String> newFileNames = new ArrayList<>();
+
+            for(MultipartFile imageFile : imageFiles){
+                String fileOriginName = imageFile.getOriginalFilename();
+
+                UUID uuid = UUID.randomUUID();
+                String extension = null;
+
+                if(fileOriginName != null){
+                    extension = fileOriginName.substring(fileOriginName.lastIndexOf("."));
+                }
+
+                String newFileName = uuid + extension;
+                newFileNames.add(newFileName);
+
+                String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + newFileName;
+
+                imageFile.transferTo(new File(filePath));
+            }
+
+            List<PostImages> images = newFileNames.stream().map(file -> PostImages.create(newPost, file, false)).toList();
             images.getFirst().changeIsThumbNail();
 
             for (PostImages image : images) {
                 newPost.addImages(image);
             }
+
+            postImages = newPost
+                    .getImages()
+                    .stream()
+                    .map(image -> new PostImageResponse(newPost.getId(), image.getImage_url(), image.getIsThumbnail()))
+                    .collect(Collectors.toList());
         }
+
+
+        // 로그인된 유저인지 토큰 확인 로직 추가 예정
 
         databasePostRepository.save(newPost);
 
-        List<PostImageResponse> postImages = newPost
-                .getImages()
-                .stream()
-                .map(image -> new PostImageResponse(newPost.getId(), image.getImage_url(), image.getIsThumbnail()))
-                .collect(Collectors.toList());
 
         return new PostResponse(
                 newPost.getId(),
@@ -237,12 +244,14 @@ public class PostServiceImpl implements PostService {
     public PostResponse updatePost(Long post_id, UpdatePostRequest req) throws IOException {
         Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if(findPost.isEmpty()){
+            System.out.println("1");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
         Optional<User> findUser = databaseUserRepository.findUserById(req.getAuthor_id());
 
         if(findUser.isEmpty()){
+            System.out.println("2");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
         // 작성자만 수정 가능
@@ -254,6 +263,7 @@ public class PostServiceImpl implements PostService {
 
 
         if(findProfile.isEmpty()){
+            System.out.println("3");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
@@ -267,10 +277,9 @@ public class PostServiceImpl implements PostService {
 
         databasePostRepository.update(data.getId(), data.getTitle(), data.getContent(), data.getPostType());
 
-        if (!req.getNewImages().isEmpty()) {
-            databasePostImageRepository.deleteAllPostImagesByPostId(data.getId());
+        if (req.getNewImages() != null && !req.getNewImages().isEmpty()) {
 
-            List<String> currentImageFiles = req.getCurrentImages();
+            List<String> currentImageFiles = data.getImages().stream().map(PostImages::getImage_url).toList();
 
             for(String currentImageFile: currentImageFiles){
                 File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + currentImageFile);
@@ -280,17 +289,15 @@ public class PostServiceImpl implements PostService {
                         System.out.println("삭제 실패");
                         throw new RuntimeException("파일 삭제 실패: " + currentImageFile);
                     }
-                    Optional<PostImages> currentImage = databasePostImageRepository.findPostImageByUrl(currentImageFile);
-                    if(currentImage.isEmpty()){
-                        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "post_image_not_found");
-                    }
-                    databasePostImageRepository.deletePostImagesById(currentImage.get().getId());
                 }
             }
+
+            databasePostImageRepository.deleteAllPostImagesByPostId(data.getId());
 
             System.out.println("원래 이미지 삭제 완료");
 
             List<MultipartFile> newImageFiles = req.getNewImages();
+            List<String> newImageFileNames = new ArrayList<>();
             for(MultipartFile newImageFile : newImageFiles){
                 String fileName = newImageFile.getOriginalFilename();
                 UUID uuid = UUID.randomUUID();
@@ -306,9 +313,8 @@ public class PostServiceImpl implements PostService {
                 String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + newFileName;
 
                 newImageFile.transferTo(new File(filePath));
+                newImageFileNames.add(newFileName);
             }
-
-            List<String> newImageFileNames = newImageFiles.stream().map(MultipartFile::getOriginalFilename).toList();
 
             // 수정
             List<PostImages> images = newImageFileNames.stream().map(image -> PostImages.create(data, image, false)).toList();
@@ -333,7 +339,6 @@ public class PostServiceImpl implements PostService {
         }
 
         Post post = findPost.get();
-
         // 작성자만 삭제 가능
         if(!post.getAuthor().getId().equals(user_id)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
@@ -343,14 +348,25 @@ public class PostServiceImpl implements PostService {
         if(findProfile.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
-
-        databasePostRepository.deletePostById(post_id);
-
         UserProfile profile = findProfile.get();
 
+        List<PostImageResponse> postImages = post.getImages().stream().map(postImage -> new PostImageResponse(post_id, postImage.getImage_url(), postImage.getIsThumbnail())).toList();
+        List<String> deletePostImageFiles = postImages.stream().map(PostImageResponse::getImage_url).toList();
+
+        for(String deletePostImageFile : deletePostImageFiles){
+            File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + deletePostImageFile);
+            if(target.exists()){
+                boolean deleted = target.delete();
+                if(!deleted){
+                    System.out.println("삭제 실패");
+                    throw new RuntimeException("파일 삭제 실패: " + deletePostImageFile);
+                }
+            }
+        }
+
+        databasePostRepository.deletePostById(post_id);
         databasePostImageRepository.deleteAllPostImagesByPostId(post_id);
 
-        List<PostImageResponse> postImages = post.getImages().stream().map(postImage -> new PostImageResponse(post_id, postImage.getImage_url(), postImage.getIsThumbnail())).toList();;
 
         databaseLikeRepository.deleteLikePostInfo(post_id);
         databaseCommentRepository.deleteCommentByPostId(post_id);

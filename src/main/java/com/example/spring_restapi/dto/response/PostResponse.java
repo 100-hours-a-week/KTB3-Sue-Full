@@ -45,7 +45,7 @@ public class PostResponse {
     private LocalDateTime createdAt;
 
     @Schema(description = "게시글 응답 - 수정일자", example = "20251020T10:00:00")
-    private LocalDateTime updatdAt;
+    private LocalDateTime updatedAt;
 
     public PostResponse(
             Long post_id,
@@ -59,7 +59,7 @@ public class PostResponse {
             Integer likeCount,
             Integer commentCount,
             LocalDateTime createdAt,
-            LocalDateTime updatdAt
+            LocalDateTime updatedAt
     ){
         this.post_id = post_id;
         this.authorNickname = authorNickname;
@@ -72,6 +72,6 @@ public class PostResponse {
         this.likeCount = likeCount;
         this.commentCount = commentCount;
         this.createdAt = createdAt;
-        this.updatdAt = updatdAt;
+        this.updatedAt = updatedAt;
     }
 }
