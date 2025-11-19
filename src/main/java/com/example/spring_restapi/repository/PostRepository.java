@@ -44,6 +44,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             """)
     List<Post> findPostByPostAuthor_Id(Long author_id);
 
+    @Query("""
+            select p
+            from Post p
+            join fetch p.author
+            where p.id = :post_id
+            and p.author.id = :user_id
+            and p.deletedAt IS NULL
+            """)
+    Optional<Post> findPostByPostIdAndUserId(Long post_id, Long user_id);
+
     // 제목에 키워드가 포함된 게시글들 검색 (대소문자 무시, 전체 결과 반환)
     List<Post> findByTitleContainingIgnoreCase(String keyword);
 

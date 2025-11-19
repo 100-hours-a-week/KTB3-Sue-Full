@@ -3,6 +3,7 @@ package com.example.spring_restapi.controller;
 import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.DeletePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
+import com.example.spring_restapi.dto.request.UserIdBodyRequest;
 import com.example.spring_restapi.dto.response.CommonResponse;
 import com.example.spring_restapi.dto.response.PostResponse;
 import com.example.spring_restapi.service.PostService;
@@ -52,6 +53,19 @@ public class PostController {
         PostResponse data = postServiceImpl.getPostByPostId(post_id);
 
         CommonResponse<PostResponse> res = CommonResponse.success("read_post_success", data);
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "게시물 작성자 여부 체크", description = "게시물이 주어진 유저에 의해 쓰였는지 확인")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "게시물 작성 여부 체크 성공"),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
+    })
+    @GetMapping("/{post_id}/check")
+    public ResponseEntity<CommonResponse<Boolean>> checkPostingByUser(@PathVariable Long post_id, @RequestParam Long user_id){
+        Boolean data = postServiceImpl.checkPostingByUser(post_id, user_id);
+
+        CommonResponse<Boolean> res = CommonResponse.success("check_post_written_by_user_success", data);
         return ResponseEntity.ok(res);
     }
 

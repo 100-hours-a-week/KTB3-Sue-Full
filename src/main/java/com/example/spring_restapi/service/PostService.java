@@ -20,6 +20,8 @@ public interface PostService {
 
     Page<PostResponse> getPostsOfPage(int page, int size);
 
+    Boolean checkPostingByUser(Long post_id, Long user_id);
+
     PostResponse updatePost(Long post_id, UpdatePostRequest req) throws IOException;
 
     PostResponse deletePost(Long post_id, Long user_id);

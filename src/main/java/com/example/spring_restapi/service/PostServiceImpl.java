@@ -195,6 +195,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Boolean checkPostingByUser(Long post_id, Long user_id){
+        Optional<Post> findPost = databasePostRepository.findPostByPostIdAndUserId(post_id, user_id);
+
+        return findPost.isPresent();
+    }
+
+    @Override
     @Transactional
     public Page<PostResponse> getPostsOfPage(int page, int size){
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
