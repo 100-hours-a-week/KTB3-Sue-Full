@@ -3,6 +3,8 @@ package com.example.spring_restapi.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class CommentResponse {
 
@@ -24,12 +26,15 @@ public class CommentResponse {
     @Schema(description = "댓글 응답 - 내용", example = "cool...")
     private String content;
 
-    public CommentResponse(Long id, Long post_id, Long user_id, String content, String user_nickname, String user_profileImage){
+    private LocalDateTime createdAt;
+
+    public CommentResponse(Long id, Long post_id, Long user_id, String content, String user_nickname, String user_profileImage, LocalDateTime createdAt){
         this.id = id;
         this.post_id = post_id;
         this.user_id = user_id;
         this.content = content;
         this.user_nickname = user_nickname;
         this.user_profileImage = user_profileImage;
+        this.createdAt = createdAt;
     }
 }

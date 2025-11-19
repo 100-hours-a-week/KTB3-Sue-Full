@@ -48,9 +48,11 @@ public class CommentServiceImpl implements CommentService {
                         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
                     }
 
-                    return new CommentResponse(comment.getId(), post_id, comment.getUser().getId(), comment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
+                    return new CommentResponse(comment.getId(), post_id, comment.getUser().getId(), comment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage(), comment.getCreatedAt());
                 });
     }
+
+
 
     @Override
     @Transactional
@@ -76,7 +78,7 @@ public class CommentServiceImpl implements CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return new CommentResponse(newComment.getId(), post_id, newComment.getUser().getId(), newComment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
+        return new CommentResponse(newComment.getId(), post_id, newComment.getUser().getId(), newComment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage(), newComment.getCreatedAt());
     }
 
     @Override
@@ -110,7 +112,7 @@ public class CommentServiceImpl implements CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return new CommentResponse(update.getId(), findPost.get().getId(), req.getUser_id(), req.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
+        return new CommentResponse(update.getId(), findPost.get().getId(), req.getUser_id(), req.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage(), update.getCreatedAt());
     }
 
     @Override
@@ -143,7 +145,8 @@ public class CommentServiceImpl implements CommentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
 
-        return new CommentResponse(comment.getId(), findPost.getId(), comment.getUser().getId(), comment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage());
+        databasePostRepository.deleteCommentBySomeone(findPost.getId());
+        return new CommentResponse(comment.getId(), findPost.getId(), comment.getUser().getId(), comment.getContent(), findProfile.get().getNickname(), findProfile.get().getProfileImage(), comment.getCreatedAt());
     }
 
 }

@@ -43,6 +43,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             select c
             from Comment c
             where c.id = :comment_id
+            and c.deletedAt IS NULL
             """)
     Optional<Comment> findCommentById(Long comment_id);
 
@@ -50,6 +51,17 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             select c
             from Comment c
             where c.post.id = :post_id
+            and c.deletedAt IS NULL
             """)
     Slice<Comment> findCommentsByPostId(Long post_id, Pageable pageable);
+
+//    @Query("""
+//            select c
+//            from Comment c
+//            join fetch c.user
+//            where c.post.id = :post_id
+//            and c.user.id = :user_id
+//            and c.deletedAt IS NULL
+//            """)
+//    List<Comment> findCommentsByPostIdAndUserId(Long post_id, Long user_id);
 }

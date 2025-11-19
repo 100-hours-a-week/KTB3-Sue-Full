@@ -109,9 +109,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("""
             update Post p
             set p.commentCount = p.commentCount - 1
-            where p.id = :id
+            where p.id = :post_id
             """)
-    void deleteCommentBySomeone(Post post);
+    void deleteCommentBySomeone(Long post_id);
 
     @Modifying
     @Query("""

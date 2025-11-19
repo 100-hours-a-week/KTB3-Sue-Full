@@ -36,7 +36,7 @@ public class Comment extends AbstractAuditable {
     private User user;
 
     @Schema(description = "댓글 내용", example = "cool...")
-    @Column(name = "content", length = 200)
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
     @Schema(description = "댓글 작성일자", example = "20251020T10:00:00")
