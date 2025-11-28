@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/posts/{post_id}/likes")
+@RequestMapping("/api/posts/{post_id}/likes")
 public class LikeController {
     private final LikeService likeServiceImpl;
 

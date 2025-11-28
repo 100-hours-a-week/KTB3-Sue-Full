@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/posts/{post_id}/comments")
+@RequestMapping("/api/posts/{post_id}/comments")
 public class CommentController {
     private final CommentService commentServiceImpl;
 
