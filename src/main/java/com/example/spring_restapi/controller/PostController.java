@@ -6,6 +6,7 @@ import com.example.spring_restapi.dto.request.UpdatePostRequest;
 import com.example.spring_restapi.dto.request.UserIdBodyRequest;
 import com.example.spring_restapi.dto.response.CommonResponse;
 import com.example.spring_restapi.dto.response.PostResponse;
+import com.example.spring_restapi.model.Post;
 import com.example.spring_restapi.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -53,6 +54,23 @@ public class PostController {
         PostResponse data = postServiceImpl.getPostByPostId(post_id);
 
         CommonResponse<PostResponse> res = CommonResponse.success("read_post_success", data);
+        return ResponseEntity.ok(res);
+    }
+
+    @Operation(summary = "특정 유저가 작성한 게시물 조회", description = "작성자 아이디를 이용하여 게시물 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "게시물 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 게시물임")
+    })
+    @GetMapping("/author/{user_id}")
+    public ResponseEntity<CommonResponse<Page<PostResponse>>> readPostsByAuthorId(
+            @PathVariable Long user_id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        Page<PostResponse> data= postServiceImpl.getPostByAuthorId(user_id, page, size);
+
+        CommonResponse<Page<PostResponse>> res = CommonResponse.success("read_post_success", data);
         return ResponseEntity.ok(res);
     }
 

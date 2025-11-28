@@ -30,7 +30,7 @@ public class UserProfile extends AbstractAuditable {
     private User user;
 
     @Schema(description = "사용자 닉네임", example = "sue")
-    @Column(name = "nickname", length = 50, unique = true)
+    @Column(name = "nickname", length = 50)
     private String nickname;
 
     @Schema(description = "사용자 프로필 이미지", example = "profileImage.jpg")

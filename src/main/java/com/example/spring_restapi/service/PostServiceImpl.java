@@ -161,8 +161,10 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponse> getPostByAuthorId(Long authorId) {
-        List<Post> posts = databasePostRepository.findPostByPostAuthor_Id(authorId);
+    public Page<PostResponse> getPostByAuthorId(Long authorId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Post> posts = databasePostRepository.findPostByPostAuthor_Id(authorId, pageable);
         if (posts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
@@ -174,7 +176,7 @@ public class PostServiceImpl implements PostService {
 
         UserProfile profile = authorProfile.get();
 
-        return posts.stream().map(post -> {
+        return posts.map(post -> {
             List<PostImageResponse> images = post.getImages().stream().filter(image -> image.getDeletedAt() == null).map(image -> new PostImageResponse(post.getId(), image.getImage_url(), image.getIsThumbnail())).toList();
 
                     return new PostResponse(
@@ -191,7 +193,7 @@ public class PostServiceImpl implements PostService {
                             post.getCreatedAt(),
                             post.getUpdatedAt());
                 }
-        ).collect(Collectors.toList());
+        );
     }
 
     @Override

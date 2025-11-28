@@ -25,7 +25,7 @@ public class User extends AbstractAuditable {
     private Long id;
 
     @Schema(description = "사용자 이메일", example = "2L")
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", nullable = false)
     private String email;
 
     @Schema(description = "사용자 비밀번호", example = "password")

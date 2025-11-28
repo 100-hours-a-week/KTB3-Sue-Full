@@ -10,7 +10,6 @@ import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
-import org.hibernate.internal.log.SubSystemLogging;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

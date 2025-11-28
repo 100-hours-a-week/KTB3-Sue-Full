@@ -16,7 +16,7 @@ public interface PostService {
 
     PostResponse getPostByPostId(Long post_id);
 
-    List<PostResponse> getPostByAuthorId(Long authorId);
+    Page<PostResponse> getPostByAuthorId(Long authorId, int page, int size);
 
     Page<PostResponse> getPostsOfPage(int page, int size);
 

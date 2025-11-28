@@ -1,7 +1,6 @@
 package com.example.spring_restapi.repository;
 
 import com.example.spring_restapi.model.Post;
-import com.example.spring_restapi.model.PostImages;
 import com.example.spring_restapi.model.PostType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +21,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             from Post p
             join fetch p.author
             where p.deletedAt IS NULL
-            order by p.createdAt
+            order by p.createdAt desc
             """)
     Page<Post> findPostsOfPage(Pageable pageable);
 
@@ -41,8 +40,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             join fetch p.author
             where p.author.id = :author_id
             and p.deletedAt IS NULL
+            order by p.createdAt desc
             """)
-    List<Post> findPostByPostAuthor_Id(Long author_id);
+    Page<Post> findPostByPostAuthor_Id(Long author_id, Pageable pageable);
 
     @Query("""
             select p
@@ -108,7 +108,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying
     @Query("""
             update Post p
-            set p.commentCount = p.commentCount - 1
+            set p.commentCount = CASE WHEN p.commentCount > 0 THEN p.commentCount - 1 ELSE 0 END
             where p.id = :post_id
             """)
     void deleteCommentBySomeone(Long post_id);
