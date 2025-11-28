@@ -6,6 +6,7 @@ import com.example.spring_restapi.model.*;
 import com.example.spring_restapi.dto.request.CreatePostRequest;
 import com.example.spring_restapi.dto.request.UpdatePostRequest;
 import com.example.spring_restapi.repository.*;
+import com.example.spring_restapi.storage.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +29,8 @@ public class PostServiceImpl implements PostService {
     private final UserProfileRepository databaseUserProfileRepository;
     private final LikeRepository databaseLikeRepository;
     private final CommentRepository databaseCommentRepository;
+
+    private final S3Uploader s3Uploader;
 
     @Override
     @Transactional
@@ -53,46 +55,31 @@ public class PostServiceImpl implements PostService {
 
         Post newPost = new Post(req.getTitle(), req.getContent(), req.getPostType(), user);
 
-        List<PostImageResponse> postImages = new ArrayList<>();
-
         if (req.getImages() != null && !req.getImages().isEmpty()) {
             List<MultipartFile> imageFiles = req.getImages();
-            List<String> fileNames = imageFiles.stream().map(MultipartFile::getOriginalFilename).toList();
 
+            List<String> imageFileUrls = new ArrayList<>();
 
-            List<String> newFileNames = new ArrayList<>();
-
-            for(MultipartFile imageFile : imageFiles){
-                String fileOriginName = imageFile.getOriginalFilename();
-
-                UUID uuid = UUID.randomUUID();
-                String extension = null;
-
-                if(fileOriginName != null){
-                    extension = fileOriginName.substring(fileOriginName.lastIndexOf("."));
-                }
-
-                String newFileName = uuid + extension;
-                newFileNames.add(newFileName);
-
-                String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + newFileName;
-
-                imageFile.transferTo(new File(filePath));
+            for (MultipartFile imageFile : imageFiles) {
+                String imageKey = s3Uploader.upload(imageFile, "post-images");
+                imageFileUrls.add(imageKey);
             }
 
-            List<PostImages> images = newFileNames.stream().map(file -> PostImages.create(newPost, file, false)).toList();
+            List<PostImages> images = imageFileUrls.stream().map(url -> PostImages.create(newPost, url, false)).toList();
             images.getFirst().changeIsThumbNail();
 
             for (PostImages image : images) {
                 newPost.addImages(image);
             }
-
-            postImages = newPost
-                    .getImages()
-                    .stream()
-                    .map(image -> new PostImageResponse(newPost.getId(), image.getImage_url(), image.getIsThumbnail()))
-                    .collect(Collectors.toList());
         }
+
+
+        List<PostImageResponse> postImages = newPost
+                .getImages()
+                .stream()
+                .map(image -> new PostImageResponse(newPost.getId(), image.getImage_url(), image.getIsThumbnail()))
+                .collect(Collectors.toList());
+
 
 
         // 로그인된 유저인지 토큰 확인 로직 추가 예정
@@ -290,15 +277,8 @@ public class PostServiceImpl implements PostService {
 
             List<String> currentImageFiles = data.getImages().stream().map(PostImages::getImage_url).toList();
 
-            for(String currentImageFile: currentImageFiles){
-                File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + currentImageFile);
-                if(target.exists()){
-                    boolean deleted = target.delete();
-                    if(!deleted){
-                        System.out.println("삭제 실패");
-                        throw new RuntimeException("파일 삭제 실패: " + currentImageFile);
-                    }
-                }
+            for(String currentImageFilePath: currentImageFiles){
+                s3Uploader.delete(currentImageFilePath);
             }
 
             databasePostImageRepository.deleteAllPostImagesByPostId(data.getId());
@@ -306,27 +286,14 @@ public class PostServiceImpl implements PostService {
             System.out.println("원래 이미지 삭제 완료");
 
             List<MultipartFile> newImageFiles = req.getNewImages();
-            List<String> newImageFileNames = new ArrayList<>();
+            List<String> newImageUrls = new ArrayList<>();
             for(MultipartFile newImageFile : newImageFiles){
-                String fileName = newImageFile.getOriginalFilename();
-                UUID uuid = UUID.randomUUID();
-                String extension = null;
-
-                if (fileName != null) {
-                    extension = fileName.substring(fileName.lastIndexOf("."));
-                }
-
-                String newFileName = uuid + extension;
-                System.out.println("new " + newFileName);
-
-                String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + newFileName;
-
-                newImageFile.transferTo(new File(filePath));
-                newImageFileNames.add(newFileName);
+                String newImageUrl = s3Uploader.upload(newImageFile, "post-images");
+                newImageUrls.add(newImageUrl);
             }
 
             // 수정
-            List<PostImages> images = newImageFileNames.stream().map(image -> PostImages.create(data, image, false)).toList();
+            List<PostImages> images = newImageUrls.stream().map(image -> PostImages.create(data, image, false)).toList();
             images.getFirst().changeIsThumbNail();
 
             for (PostImages image : images) {
@@ -363,14 +330,7 @@ public class PostServiceImpl implements PostService {
         List<String> deletePostImageFiles = postImages.stream().map(PostImageResponse::getImage_url).toList();
 
         for(String deletePostImageFile : deletePostImageFiles){
-            File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/postImage/" + deletePostImageFile);
-            if(target.exists()){
-                boolean deleted = target.delete();
-                if(!deleted){
-                    System.out.println("삭제 실패");
-                    throw new RuntimeException("파일 삭제 실패: " + deletePostImageFile);
-                }
-            }
+            s3Uploader.delete(deletePostImageFile);
         }
 
         databasePostRepository.deletePostById(post_id);
