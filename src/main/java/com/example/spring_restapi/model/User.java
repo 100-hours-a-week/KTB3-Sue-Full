@@ -29,7 +29,7 @@ public class User extends AbstractAuditable {
     private String email;
 
     @Schema(description = "사용자 비밀번호", example = "password")
-    @Column(name = "password", nullable = false, length = 50)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Transient

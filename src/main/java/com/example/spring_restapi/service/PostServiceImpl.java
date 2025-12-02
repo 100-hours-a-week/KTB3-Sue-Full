@@ -10,6 +10,7 @@ import com.example.spring_restapi.storage.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -237,6 +238,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+//    @PreAuthorize("hasRole('ADMIN') or @databasePostRepository.findById(#post_id).get().getAuthor() == authentication.principal.username")
     public PostResponse updatePost(Long post_id, UpdatePostRequest req) throws IOException {
         Optional<Post> findPost = databasePostRepository.findPostById(post_id);
         if(findPost.isEmpty()){

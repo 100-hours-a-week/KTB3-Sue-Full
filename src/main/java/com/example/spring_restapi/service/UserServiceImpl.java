@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +33,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository databaseUserRepository;
     private final UserProfileRepository databaseUserProfileRepository;
 
+    private final AuthenticationManager authenticationManager;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
     private final UpdateUserService<UserInfoResponse, UpdateUserInfoRequest> updateUserInfo;
     private final UpdateUserService<UserInfoResponse, UpdatePasswordRequest> updateUserPassword;
     private final UpdateUserService<UserProfileResponse, UpdateUserNicknameRequest> updateUserNickname;
@@ -43,6 +48,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse login(LoginRequest req){
+
         if(req.getEmail().isEmpty() || req.getPassword().isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
         }
@@ -97,7 +103,10 @@ public class UserServiceImpl implements UserService {
 
         String profileImageUrl  = s3Uploader.upload(profileImage, "profile-image");
 
-        User newUser = User.create(req.getEmail(), req.getPassword(), req.getPasswordConfirm(), req.getUserRole());
+        String encodedPassword = bCryptPasswordEncoder.encode(req.getPassword());
+        String encodedPasswordConfirm = bCryptPasswordEncoder.encode(req.getPasswordConfirm());
+
+        User newUser = User.create(req.getEmail(), encodedPassword, encodedPasswordConfirm, req.getUserRole());
 
         UserProfile newUserProfile = UserProfile.create(req.getNickname(), profileImageUrl, req.getIntroduce(), req.getGender());
 
