@@ -15,8 +15,22 @@
   - Spring Web
   - Spring Data JPA
   - Spring Security + JWT
-- **Database**: MySQL (또는 호환 RDBMS)
+- **Database**: MySQL
 - **Build Tool**: Gradle
 - **ETC**
   - Swagger / Springdoc(OpenAPI) – API 문서
   - S3 – 이미지 저장
+
+## 주요 기능
+- 회원 가입, 회원정보 수정, 회원 탈퇴
+- 게시물 CRUD
+- 댓글 CRUD
+- 좋아요 CRD
+- 이미지 처리(프로필 이미지, 게시글 이미지)
+- 스프링 시큐리티 JWT Access Token
+
+## Storage
+AWS S3
+
+## Security
+LoginFilter, JWTFilter 구현
