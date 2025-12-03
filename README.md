@@ -7,3 +7,16 @@
 해당 Repo는 **Spring Boot 기반의 백엔드 API 서버**로,  
 회원가입, 로그인, 장소(게시글) CRUD, 이미지 업로드, 좋아요, 댓글 기능을 제공합니다.
 
+## 🚀 Tech Stack
+
+- **Language**: Java (JDK 17+)
+- **Framework**: Spring Boot  
+- **Modules**
+  - Spring Web
+  - Spring Data JPA
+  - Spring Security + JWT
+- **Database**: MySQL (또는 호환 RDBMS)
+- **Build Tool**: Gradle
+- **ETC**
+  - Swagger / Springdoc(OpenAPI) – API 문서
+  - S3 – 이미지 저장
