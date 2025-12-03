@@ -2,10 +2,13 @@ package com.example.spring_restapi.security;
 
 import com.example.spring_restapi.dto.auth.CustomUserDetails;
 import com.example.spring_restapi.dto.request.LoginRequest;
+import com.example.spring_restapi.dto.response.CommonResponse;
+import com.example.spring_restapi.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -52,7 +55,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication){
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal(); // 특정한 유저 확인 가능
 
         String username = userDetails.getUsername();
@@ -65,9 +68,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(username, role, 60*60*10L);
+        String token = jwtUtil.createJwt(username, role, 60*60*100L);
 
         response.addHeader("Authorization", "Bearer " + token);
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json;charset=UTF-8");
+
+        CommonResponse<String> body =
+                CommonResponse.success("login_success", null);
+
+        new ObjectMapper().writeValue(response.getWriter(), body);
     }
 
     @Override

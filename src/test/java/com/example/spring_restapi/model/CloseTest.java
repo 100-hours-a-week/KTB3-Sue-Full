@@ -20,7 +20,7 @@ public class CloseTest {
     void closeTest(){
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        User user = new User("closeTest@adapterz.kr", "123aS!", "Adapterz", UserRole.USER);
+        User user = new User("closeTest@adapterz.kr", "123aS!", "Adapterz", UserRole.ROLE_USER);
         entityManager.getTransaction().begin();
         entityManager.persist(user);
         entityManager.getTransaction().commit();

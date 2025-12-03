@@ -19,14 +19,14 @@ class UserTest {
     @Test
     @Rollback(false)
     void idTest(){
-        User user = new User("osj1405@naver.com", "osj1405", "osj1405Confirm", UserRole.USER);
+        User user = new User("osj1405@naver.com", "osj1405", "osj1405Confirm", UserRole.ROLE_USER);
         entityManager.persist(user);
     }
 
     @Test
     @Rollback(false)
     void createdUpdatedAtTest() {
-        User user = new User("tester@adapterz.kr", "123aS!", "123aSConfirm", UserRole.USER);
+        User user = new User("tester@adapterz.kr", "123aS!", "123aSConfirm", UserRole.ROLE_USER);
         LocalDateTime now = LocalDateTime.now();
 
         user.setCreatedAt(now);
@@ -52,7 +52,7 @@ class UserTest {
     @Test
     @Rollback(false)
     void flushTest() {
-        User user = new User("duckjin1405@naver.com", "sujin1405", "sujin1405Confirm", UserRole.USER);
+        User user = new User("duckjin1405@naver.com", "sujin1405", "sujin1405Confirm", UserRole.ROLE_USER);
 
         System.out.println("=== Flush (아무것도 없음) ===");
         entityManager.flush(); // 아무 것도 없음 (정상)
@@ -70,7 +70,7 @@ class UserTest {
     @Test
     @Rollback(false)
     void removeTest() {
-        User user = new User("tester@adapterz.kr", "123aS!", "DeleteUser", UserRole.USER);
+        User user = new User("tester@adapterz.kr", "123aS!", "DeleteUser", UserRole.ROLE_USER);
         entityManager.persist(user);
 
         entityManager.flush(); // INSERT 실행
@@ -86,7 +86,7 @@ class UserTest {
     @Test
     @Rollback(false)
     void clearTest() {
-        User user = new User("clear@adapterz.kr", "123aS!", "ClearUser", UserRole.USER);
+        User user = new User("clear@adapterz.kr", "123aS!", "ClearUser", UserRole.ROLE_USER);
 
         System.out.println("=== Persist ===");
         entityManager.persist(user); // 영속화 (아직 INSERT 미발행)
@@ -114,7 +114,7 @@ class UserTest {
                     "tester" + i + "@adapterz.kr",
                     "123aS!" + i,
                     "Adapterz" + i,
-                    UserRole.USER
+                    UserRole.ROLE_USER
             );
             entityManager.persist(user);
         }
@@ -140,7 +140,7 @@ class UserTest {
     @Rollback(false)
     void mergeAfterDetachUpdatesDB() {
         // 저장
-        User user = new User("mergeTest@adapterz.kr", "123aS!", "BeforeMerge", UserRole.USER);
+        User user = new User("mergeTest@adapterz.kr", "123aS!", "BeforeMerge", UserRole.ROLE_USER);
         entityManager.persist(user);
         entityManager.flush();
         entityManager.clear(); // 영속성 컨텍스트 비우기

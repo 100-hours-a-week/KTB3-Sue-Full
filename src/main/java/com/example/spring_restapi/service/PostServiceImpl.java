@@ -152,6 +152,7 @@ public class PostServiceImpl implements PostService {
     public Page<PostResponse> getPostByAuthorId(Long authorId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
+
         Page<Post> posts = databasePostRepository.findPostByPostAuthor_Id(authorId, pageable);
         if (posts.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");

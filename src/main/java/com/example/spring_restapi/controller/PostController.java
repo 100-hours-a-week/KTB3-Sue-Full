@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -68,7 +69,13 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ){
+
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("[/author/{user_id}] auth = " + auth);
+
         Page<PostResponse> data= postServiceImpl.getPostByAuthorId(user_id, page, size);
+
+        System.out.println("[/author/{user_id}] service 호출 끝, data size = " + data.getContent().size());
 
         CommonResponse<Page<PostResponse>> res = CommonResponse.success("read_post_success", data);
         return ResponseEntity.ok(res);

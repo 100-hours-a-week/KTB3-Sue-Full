@@ -1,6 +1,7 @@
 package com.example.spring_restapi.config;
 
 
+import com.example.spring_restapi.security.JWTFilter;
 import com.example.spring_restapi.security.JWTUtil;
 import com.example.spring_restapi.security.LoginFilter;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -42,9 +42,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/signup", "/api/accounts", "/css/**", "/api/accounts/user", "/api/accounts/nickname").permitAll()
+                        .requestMatchers("/", "/api/accounts", "/api/accounts/user", "api/accounts/email","/api/accounts/nickname").permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationCofiguration), "/api/accounts", jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -65,7 +66,7 @@ public class SecurityConfig {
 
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Custom-Header"));
 
-        corsConfiguration.setExposedHeaders(List.of("Custom-Header"));
+        corsConfiguration.setExposedHeaders(List.of("Authorization", "Custom-Header"));
 
         corsConfiguration.setAllowCredentials(true);
 

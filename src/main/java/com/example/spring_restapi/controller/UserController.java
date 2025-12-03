@@ -1,10 +1,13 @@
 package com.example.spring_restapi.controller;
 
+import com.example.spring_restapi.config.SecurityConfig;
+import com.example.spring_restapi.dto.auth.CustomUserDetails;
 import com.example.spring_restapi.dto.request.*;
 import com.example.spring_restapi.dto.response.CommonResponse;
 import com.example.spring_restapi.dto.response.UserInfoResponse;
 import com.example.spring_restapi.dto.response.UserProfileResponse;
 import com.example.spring_restapi.dto.response.UserResponse;
+import com.example.spring_restapi.model.User;
 import com.example.spring_restapi.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -14,6 +17,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,18 +32,40 @@ import java.util.List;
 @RequestMapping("/api/accounts")
 public class UserController {
     private final UserService userServiceImpl;
+    private final AuthenticationManager authenticationManager;
 
-    @Operation(summary = "로그인", description = "이메일과 비밀번호를 이용하여 로그인")
+//    @Operation(summary = "로그인", description = "이메일과 비밀번호를 이용하여 로그인")
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+//            @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음")
+//    })
+//    @PostMapping
+//    public ResponseEntity<CommonResponse<UserResponse>> login(@RequestBody LoginRequest req){
+//        UserResponse data = userServiceImpl.login(req);
+//
+//        CommonResponse<UserResponse> res = CommonResponse.success("login_success", data);
+//        return ResponseEntity.ok(res);
+//
+//    }
+
+    @Operation(summary = "로그인한 유저의 정보", description = "로그인한 유저의 정보를 가져옴")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @ApiResponse(responseCode = "404", description = "유저를 찾을 수 없음")
+            @ApiResponse(responseCode = "200", description = "정보 가져오기 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-    @PostMapping
-    public ResponseEntity<CommonResponse<UserResponse>> login(@RequestBody LoginRequest req){
+    @GetMapping("/me")
+    public ResponseEntity<?> getUserInfo(Authentication authentication){
 
-        UserResponse data = userServiceImpl.login(req);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println("[/me] email = " + email);
 
-        CommonResponse<UserResponse> res = CommonResponse.success("login_success", data);
+        UserResponse data = userServiceImpl.getUserByEmail(email);
+
+        System.out.println("[/me] authentication = " + authentication);
+        System.out.println("[/me] authorities = " + authentication.getAuthorities());
+
+        CommonResponse<UserResponse> res = CommonResponse.success("load info", data);
+
         return ResponseEntity.ok(res);
 
     }

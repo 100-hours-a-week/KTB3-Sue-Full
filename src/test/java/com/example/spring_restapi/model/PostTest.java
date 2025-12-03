@@ -17,7 +17,7 @@ public class PostTest {
     @Test
     @Rollback(value = false)
     void persistTest(){
-        User user = new User("osj1405@naver.com", "osj1405", "osj1405Confirm", UserRole.USER);
+        User user = new User("osj1405@naver.com", "osj1405", "osj1405Confirm", UserRole.ROLE_USER);
         entityManager.persist(user);
 
         Post post = new Post("first write", "very hard...", PostType.FREE, user);

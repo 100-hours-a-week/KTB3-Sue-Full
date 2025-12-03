@@ -87,6 +87,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse makeUserResponse(User user){
+        Optional<UserProfile> findProfile = databaseUserProfileRepository.findProfileByUserId(user.getId());
+
+        if(findProfile.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found");
+        }
+
+        UserProfile userProfile = findProfile.get();
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUserRole(),
+                userProfile.getNickname(),
+                userProfile.getProfileImage(),
+                userProfile.getIntroduce(),
+                userProfile.getGender(),
+                userProfile.getIsPrivate()
+        );
+    }
+
+    @Override
     @Transactional
     public UserResponse signup(SignUpRequest req) throws IOException {
         if(req.getEmail().isEmpty() || req.getPassword().isEmpty()){

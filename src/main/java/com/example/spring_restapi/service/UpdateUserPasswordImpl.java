@@ -7,6 +7,7 @@ import com.example.spring_restapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,6 +19,7 @@ import java.util.Optional;
 @Qualifier("updateUserPassword")
 public class UpdateUserPasswordImpl implements UpdateUserService<UserInfoResponse, UpdatePasswordRequest>{
     private final UserRepository databaseUserRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
     @Transactional
@@ -36,13 +38,12 @@ public class UpdateUserPasswordImpl implements UpdateUserService<UserInfoRespons
 
         User updateUser = findUser.get();
 
-//        if(!updateUser.getPassword().equals(req.getCurrentPassword())){
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_request");
-//        }
+        String encodedPassword = bCryptPasswordEncoder.encode(req.getNewPassword());
+        String encodedPasswordConfirm = bCryptPasswordEncoder.encode(req.getNewPasswordConfirm());
 
-        updateUser.changePassword(req.getNewPassword(), req.getNewPasswordConfirm());
+        updateUser.changePassword(encodedPassword, encodedPasswordConfirm);
 
-        databaseUserRepository.updatePassword(updateUser.getId(), req.getNewPassword());
+        databaseUserRepository.updatePassword(updateUser.getId(), encodedPassword);
 
         return new UserInfoResponse(
                 updateUser.getId(), updateUser.getEmail(), updateUser.getUserRole()

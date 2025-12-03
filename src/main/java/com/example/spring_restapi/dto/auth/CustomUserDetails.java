@@ -3,10 +3,12 @@ package com.example.spring_restapi.dto.auth;
 import com.example.spring_restapi.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
@@ -20,11 +22,20 @@ public class CustomUserDetails implements UserDetails {
         collection.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return String.valueOf(user.getUserRole());
+                String roleName = "ROLE_" + user.getUserRole().name(); // USER -> ROLE_USER
+                return roleName;
             }
         });
 
         return collection;
+    }
+
+    public User getUser(){
+        return user;
+    }
+
+    public Long getUserId(){
+        return user.getId();
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.example.spring_restapi.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +18,6 @@ public class JWTUtil {
     private Key key;
 
     public JWTUtil(@Value("${jwt_secret_key}")String secret){
-//        byte[] byteSecretKey = Decoders.BASE64.decode(secret);
-//        key = Keys.hmacShaKeyFor(byteSecretKey);
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -50,4 +47,5 @@ public class JWTUtil {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
+
 }

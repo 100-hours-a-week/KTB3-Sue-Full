@@ -24,10 +24,12 @@ public class User extends AbstractAuditable {
     @Column(name = "user_id", nullable = false)
     private Long id;
 
+    @Setter
     @Schema(description = "사용자 이메일", example = "2L")
     @Column(name = "email", nullable = false)
     private String email;
 
+    @Setter
     @Schema(description = "사용자 비밀번호", example = "password")
     @Column(name = "password", nullable = false)
     private String password;
@@ -35,6 +37,7 @@ public class User extends AbstractAuditable {
     @Transient
     private String passwordConfirm;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
@@ -53,7 +56,7 @@ public class User extends AbstractAuditable {
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;
 
-    protected User(){}
+    public User(){}
 
     public User(String email, String password, String passwordConfirm, UserRole userRole){
         if (email == null || email.isBlank()) throw new IllegalArgumentException("email is required");
