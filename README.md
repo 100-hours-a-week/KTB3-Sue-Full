@@ -1,2 +1,9 @@
-# Focus Place
-Backend Stack: Spring Boot, JPA, MySQL
+# Focus Place ☕️🧠
+> **집중하기 좋은 공간들을 기록하고 공유하는 아카이빙 서비스 – Focus Place의 REST API 서버**
+
+카공하기 좋은 카페, 조용한 스터디 카페, 도서관, 코워킹 스페이스까지  
+“언제 어디서 집중 잘 됐는지”를 기록하고, 다른 사람들과 공유할 수 있는 서비스입니다.
+
+해당 Repo는 **Spring Boot 기반의 백엔드 API 서버**로,  
+회원가입, 로그인, 장소(게시글) CRUD, 이미지 업로드, 좋아요, 댓글 기능을 제공합니다.
+
