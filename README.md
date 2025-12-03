@@ -7,6 +7,8 @@
 해당 Repo는 **Spring Boot 기반의 백엔드 API 서버**로,  
 회원가입, 로그인, 장소(게시글) CRUD, 이미지 업로드, 좋아요, 댓글 기능을 제공합니다.
 
+## 참여자
+
 ## 🚀 Tech Stack
 
 - **Language**: Java (JDK 17+)
@@ -34,3 +36,8 @@ AWS S3
 
 ## Security
 LoginFilter, JWTFilter 구현
+
+
+## 프로젝트 폴더 구조
+
+
