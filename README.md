@@ -1,4 +1,4 @@
-# Focus Place ☕️🧠
+# Focus Place ☕️
 > **집중하기 좋은 공간들을 기록하고 공유하는 아카이빙 서비스 – Focus Place의 REST API 서버**
 
 카공하기 좋은 카페, 조용한 스터디 카페, 도서관, 코워킹 스페이스까지  
@@ -7,7 +7,8 @@
 해당 Repo는 **Spring Boot 기반의 백엔드 API 서버**로,  
 회원가입, 로그인, 장소(게시글) CRUD, 이미지 업로드, 좋아요, 댓글 기능을 제공합니다.
 
-## 참여자
+
+Sue의 Fullstack 프로젝트입니다.
 
 ## 🚀 Tech Stack
 
@@ -21,7 +22,7 @@
 - **Build Tool**: Gradle
 - **ETC**
   - Swagger / Springdoc(OpenAPI) – API 문서
-  - S3 – 이미지 저장
+  - (Local Storage ->)S3 – 이미지 저장
 
 ## 주요 기능
 - 회원 가입, 회원정보 수정, 회원 탈퇴
@@ -31,6 +32,8 @@
 - 이미지 처리(프로필 이미지, 게시글 이미지)
 - 스프링 시큐리티 JWT Access Token
 
+* 모든 Delete는 soft delete
+
 ## Storage
 AWS S3
 
@@ -39,5 +42,78 @@ LoginFilter, JWTFilter 구현
 
 
 ## 프로젝트 폴더 구조
+```
+📦src
+ ┣ 📂config
+ ┃ ┣ 📜 AuditingConfig
+ ┃ ┣ 📜 SecurityConfig
+ ┃ ┗ 📜 S3Config
+ ┣ 📂controller
+ ┃ ┣ 📜 UserController
+ ┃ ┣ 📜 PostController
+ ┃ ┣ 📜 CommentController
+ ┃ ┗ 📜 LikeController
+ ┗ 📂service
+ ┃ ┣ 📜 UserService (Interface)
+ ┃ ┃ ┗ 📜 UserServiceImpl
+ ┃ ┣ 📜 UpdateUserService (Interface)
+ ┃ ┃ ┣ 📜 UpdateUserInfoImpl
+ ┃ ┃ ┣ 📜 UpdateUserPasswordImpl
+ ┃ ┃ ┗ 📜 UpdateUserNicknameImpl
+ ┃ ┣ 📜 PostService (Interface)
+ ┃ ┃ ┗ 📜 PostServiceImpl
+ ┃ ┣ 📜 CommentService (Interface)
+ ┃ ┃ ┗ 📜 CommentServiceImpl
+ ┃ ┣ 📜 LikeService (Interface)
+ ┃ ┃ ┗ 📜 LikeServiceImpl
+ ┃ ┗ 📜 UserDetailServiceImpl
+ ┗ 📂repository
+ ┃ ┣ 📜 UserRepository
+ ┃ ┣ 📜 UserProfileRepository
+ ┃ ┣ 📜 PostRepository
+ ┃ ┣ 📜 PostImagesRepository
+ ┃ ┣ 📜 CommentRepository
+ ┃ ┗ 📜 LikeRepository
+ ┗ 📂model
+ ┃ ┣ 📜 User
+ ┃ ┣ 📜 UserProfile
+ ┃ ┣ 📜 Post
+ ┃ ┣ 📜 PostImages
+ ┃ ┣ 📜 Comment
+ ┃ ┣ 📜 Like
+ ┃ ┗ 📜 AbstractAuditable
+ ┗ 📂dto
+ ┃ ┣ 📂auth
+ ┃ ┃ ┗ 📜 CustomUserDetails
+ ┃ ┣ 📂request
+ ┃ ┃ ┗ 📜 SignUpRequest
+ ┃ ┃ ┗ 📜 EmailCheckRequest
+ ┃ ┃ ┗ 📜 NicknameCheckRequest
+ ┃ ┃ ┗ 📜 UserIdBodyRequest
+ ┃ ┃ ┗ 📜 EmailCheckRequest
+ ┃ ┃ ┗ 📜 UpdateUserInfoRequest
+ ┃ ┃ ┗ 📜 EmailCheckRequest
+ ┃ ┃ ┗ 📜 CreatePostRequest
+ ┃ ┃ ┗ 📜 UpdatePostRequest
+ ┃ ┃ ┗ 📜 DeletePostRequest
+ ┃ ┃ ┗ 📜 CreateCommentRequest
+ ┃ ┃ ┗ 📜 UpdateCommentRequest
+ ┃ ┃ ┗ 📜 CheckLikedByUserRequest
+ ┃ ┗ 📂response
+ ┃ ┃ ┗ 📜 CommonResponse
+ ┃ ┃ ┗ 📜 LoginResponse
+ ┃ ┃ ┗ 📜 UserResponse
+ ┃ ┃ ┗ 📜 UserProfileResponse
+ ┃ ┃ ┗ 📜 UserInfoResponse
+ ┃ ┃ ┗ 📜 PostResponse
+ ┃ ┃ ┗ 📜 PostImageResponse
+ ┃ ┃ ┗ 📜 CommentResponse
+ ┃ ┃ ┗ 📜 LikeResponse
+ ┃ ┃ ┗ 📜 LikeListResponse
+ ┃ ┗ 📂error
+ ┃ ┃ ┗ 📜 GlobalExceptionHandler
+ ┃ ┗ 📂storage
+ ┃   ┗ 📜 S3Uploader
 
+```
 
