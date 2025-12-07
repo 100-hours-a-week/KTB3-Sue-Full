@@ -117,3 +117,16 @@ LoginFilter, JWTFilter 구현
 
 ```
 
+### N+1 문제 개선
+게시글 조회 시 작성한 유저의 정보를 가져오는 쿼리가 한 번 더 발생하는 N+1 문제 발생
+-> fetch join을 적용하여 개선
+
+게시글 조회 시 이미지 불러오려면 findPostImagesByPostId를 통해 쿼리가 한 번 더 실행되어야 함
+-> BatchSize를 적용함
+
+### Spring Security 트러블 슈팅
+user.getUserRole()은 UserRole을 반환한다. UserRole -> USER || ADMIN
+ROLE_ 접두사가 없어 유저의 role을 제대로 확인하지 못해 403 에러 발생
+로그를 통하여 rawRole을 확인 후, 불일치를 제거하여 해결
+
+
