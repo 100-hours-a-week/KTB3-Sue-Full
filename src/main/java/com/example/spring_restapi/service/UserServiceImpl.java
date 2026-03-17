@@ -8,6 +8,7 @@ import com.example.spring_restapi.dto.request.*;
 import com.example.spring_restapi.model.UserProfile;
 import com.example.spring_restapi.repository.UserProfileRepository;
 import com.example.spring_restapi.repository.UserRepository;
+import com.example.spring_restapi.storage.S3Uploader;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.*;
@@ -37,6 +38,8 @@ public class UserServiceImpl implements UserService {
     private final UpdateUserService<UserProfileResponse, UpdateUserIntroduceRequest> updateUserIntroduce;
     private final UpdateUserService<UserProfileResponse, UpdateUserGenderRequest> updateUserGender;
     private final UpdateUserService<UserProfileResponse, UpdateUserProfileIsPrivateRequest> updateUserProfileIsPrivate;
+
+    private final S3Uploader s3Uploader;
 
     @Override
     public UserResponse login(LoginRequest req){
@@ -91,23 +94,12 @@ public class UserServiceImpl implements UserService {
         }
 
         MultipartFile profileImage = req.getProfileImage();
-        String fileName = profileImage.getOriginalFilename();
-        UUID uuid = UUID.randomUUID();
-        String extension = null;
 
-        if (fileName != null) {
-            extension = fileName.substring(fileName.lastIndexOf("."));
-        }
-
-        String newFileName = uuid + extension;
-
-        String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + newFileName;
-
-        profileImage.transferTo(new File(filePath));
+        String profileImageUrl  = s3Uploader.upload(profileImage, "profile-image");
 
         User newUser = User.create(req.getEmail(), req.getPassword(), req.getPasswordConfirm(), req.getUserRole());
 
-        UserProfile newUserProfile = UserProfile.create(req.getNickname(), newFileName, req.getIntroduce(), req.getGender());
+        UserProfile newUserProfile = UserProfile.create(req.getNickname(), profileImageUrl, req.getIntroduce(), req.getGender());
 
         User user = databaseUserRepository.save(newUser);
 
@@ -244,34 +236,15 @@ public class UserServiceImpl implements UserService {
 
             System.out.println("current " + req.getCurrentProfileImage());
 
-            File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + currentProfileImage);
-            if (target.exists()) {
-                boolean deleted = target.delete();
-                if (!deleted) {
-                    System.out.println("삭제 실패");
-                    throw new RuntimeException("파일 삭제 실패: " + currentProfileImage);
-                }
-            }
+            s3Uploader.delete(currentProfileImage);
 
             System.out.println("원래 이미지 삭제 완료");
 
-            MultipartFile profileImage = req.getNewProfileImage();
-            String fileName = profileImage.getOriginalFilename();
-            UUID uuid = UUID.randomUUID();
-            String extension = null;
+            MultipartFile newProfileImage = req.getNewProfileImage();
 
-            if (fileName != null) {
-                extension = fileName.substring(fileName.lastIndexOf("."));
-            }
+            String newProfileImageUrl = s3Uploader.upload(newProfileImage, "profile-image");
 
-            String newFileName = uuid + extension;
-            System.out.println("new " + newFileName);
-
-            String filePath = "/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + newFileName;
-
-            profileImage.transferTo(new File(filePath));
-
-            userProfile.changeProfileImage(newFileName);
+            userProfile.changeProfileImage(newProfileImageUrl);
         }
 
         System.out.println(req.getNewNickname());
@@ -304,14 +277,7 @@ public class UserServiceImpl implements UserService {
         // 프로필 이미지 로컬 스토리지에서 지우기
 
         if(!findProfile.get().getProfileImage().isEmpty()){
-            File target = new File("/Users/ohsujin/KTB/Spring/spring-restapi/src/main/resources/static/upload/profileImage/" + findProfile.get().getProfileImage());
-            if (target.exists()) {
-                boolean deleted = target.delete();
-                if (!deleted) {
-                    System.out.println("삭제 실패");
-                    throw new RuntimeException("파일 삭제 실패: " + findProfile.get().getProfileImage());
-                }
-            }
+            s3Uploader.delete(findProfile.get().getProfileImage());
         }
 
         databaseUserRepository.deleteUserById(user_id);
